@@ -312,17 +312,18 @@ app.use("*", (req, res) => res.status(404).json({ error: "Not found" }));
 // 🚀 Start Server
 async function startServer() {
   await initializeData();
-  app.listen(PORT, () => {
-    console.log(`\n🚀 IPL 2026 Fantasy API v2.0`);
-    console.log(`📡 http://localhost:${PORT}`);
-    console.log(`💾 Data: ${DATA_FILE}`);
-    console.log(`📊 ${teams.length} teams loaded`);
-    console.log(`🏏 CricAPI: ${CRICAPI_KEY !== "YOUR_API_KEY_HERE" ? "✅ Ready" : "❌ Add key"}`);
-    console.log(`\nTest endpoints:`);
-    console.log(`  GET  /api/teams`);
-    console.log(`  GET  /api/matches`);
-    console.log(`  POST /api/teams`);
-  });
+  module.exports = { app };
+  // app.listen(PORT, () => {
+  //   console.log(`\n🚀 IPL 2026 Fantasy API v2.0`);
+  //   console.log(`📡 http://localhost:${PORT}`);
+  //   console.log(`💾 Data: ${DATA_FILE}`);
+  //   console.log(`📊 ${teams.length} teams loaded`);
+  //   console.log(`🏏 CricAPI: ${CRICAPI_KEY !== "YOUR_API_KEY_HERE" ? "✅ Ready" : "❌ Add key"}`);
+  //   console.log(`\nTest endpoints:`);
+  //   console.log(`  GET  /api/teams`);
+  //   console.log(`  GET  /api/matches`);
+  //   console.log(`  POST /api/teams`);
+  // });
 }
 
 startServer().catch(err => {
