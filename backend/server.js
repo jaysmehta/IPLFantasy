@@ -195,7 +195,7 @@ app.get("/status", (req, res) => {
     status: "ok", 
     service: "IPL 2026 Fantasy API v2.0",
     teamsCount: teams.length,
-    cricapi: CRICAPI_KEY !== "e18c70fc-6fe7-4a3c-94c4-f4241f69ab1f" ? "✅ Active" : "❌ Add your key",
+    cricapi: CRICAPI_KEY == "e18c70fc-6fe7-4a3c-94c4-f4241f69ab1f" ? "✅ Active" : "❌ Add your key",
     dataFile: DATA_FILE
   });
 });
