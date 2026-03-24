@@ -14,6 +14,7 @@ async function connectDb() {
   db = client.db("iplfantasy2026");
   teamsCollection = db.collection("teams");
   console.log("✅ MongoDB connected");
+  initializeData();
 }
 
 async function loadTeamsFromDb() {
@@ -34,11 +35,18 @@ async function saveTeamToDb(team) {
 }
 
 async function deleteTeamFromDb(id) {
+
+if (!teamsCollection) {
+    console.error("MongoDB teamsCollection is not ready yet");
+    throw new Error("Database not connected");
+  }
   await teamsCollection.deleteOne({ id });
+
 }
 
 // Call this once when the server starts
 connectDb().catch(console.error);
+
 
 // Replace your old loadTeams / saveTeams:
 async function initializeData() {
@@ -75,25 +83,25 @@ app.use(cors());
 app.use(express.json());
 
 // File persistence
-async function loadTeams() {
-  try {
-    const data = await fs.readFile(DATA_FILE, "utf8");
-    return JSON.parse(data);
-  } catch {
-    return [];
-  }
-}
+// async function loadTeams() {
+//   try {
+//     const data = await fs.readFile(DATA_FILE, "utf8");
+//     return JSON.parse(data);
+//   } catch {
+//     return [];
+//   }
+// }
 
-async function saveTeams(teams) {
-  await fs.writeFile(DATA_FILE, JSON.stringify(teams, null, 2), "utf8");
-}
+// async function saveTeams(teams) {
+//   await fs.writeFile(DATA_FILE, JSON.stringify(teams, null, 2), "utf8");
+// }
 
 //let teams = [];
 
-async function initializeData() {
-  teams = await loadTeams();
-  console.log(`📊 Loaded ${teams.length} teams from ${DATA_FILE}`);
-}
+// async function initializeData() {
+//   teams = await loadTeams();
+//   console.log(`📊 Loaded ${teams.length} teams from ${DATA_FILE}`);
+// }
 
 // CricAPI: Live/upcoming IPL matches
 async function getIPLMatches() {
