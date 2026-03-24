@@ -18,18 +18,41 @@ let dbReady = false;
 async function connectDb() {
   console.log("✅ MongoDB connect call in handler");
   const client = new MongoClient(uri);
-  await client.connect();
-  const db = client.db("iplfantasy2026");
-  const teamsCollection = db.collection("teams");
-  console.log("✅ MongoDB connected in handler");
-  app.db = db;
-  app.teamsCollection = teamsCollection;
-  dbReady = true;
+
+  const timeout = 10 * 1000; // 10 seconds
+
+  try {
+    const result = await Promise.race([
+      client.connect(),
+      new Promise((_, reject) => {
+        setTimeout(
+          () => reject(new Error("MongoDB connect timeout")),
+          timeout
+        );
+      })
+    ]);
+
+    const db = client.db("iplfantasy2026");
+    const teamsCollection = db.collection("teams");
+
+    console.log("✅ MongoDB connected in handler");
+
+    // Inject into app
+    app.db = db;
+    app.teamsCollection = teamsCollection;
+    app.teams = await teamsCollection.find({}).toArray();
+
+    dbReady = true;
+    console.log(`📊 Loaded ${app.teams.length} teams`);
+  } catch (err) {
+    console.error("❌ MongoDB connection failed in handler:", err);
+    console.error("❌ MONGODB_URI:", uri);
+  }
 }
 
-connectDb().catch(err => {
-  console.error("❌ MongoDB init failed in handler:", err);
-});
+connectDb().catch(err =>
+  console.error("❌ connectDb top‑level error:", err)
+);
 
 const serverInstance = http.createServer(app);
 
@@ -37,7 +60,9 @@ module.exports = (req, res) => {
   if (!dbReady && req.url.startsWith("/api/")) {
     res.statusCode = 503;
     res.setHeader("Content-Type", "application/json");
-    res.end(JSON.stringify({ error: "Database initializing, please retry" }));
+    res.end(
+      JSON.stringify({ error: "Database initializing, please retry" })
+    );
     return;
   }
   serverInstance.emit("request", req, res);
