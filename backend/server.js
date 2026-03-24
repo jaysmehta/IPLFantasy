@@ -536,15 +536,42 @@ app.delete("/api/teams", async (req, res) => {
 // app.use("*", (req, res) => res.status(404).json({ error: "Not found" }));
 
 
-connectDb()
-  .then(async () => {
+
+async function connectDb() {
+  console.log("✅ MongoDB connect call");
+  try {
+    // Add a 10s timeout wrapper
+    const timeout = 10 * 1000;
+    const result = await Promise.race([
+      client.connect(),
+      new Promise((_, reject) => {
+        setTimeout(() => reject(new Error("MongoDB connect timeout")), timeout);
+      })
+    ]);
+    db = client.db("iplfantasy2026");
+    teamsCollection = db.collection("teams");
+    console.log("✅ MongoDB connected");
     await initializeData();
     dbReady = true;
     console.log("✅ MongoDB connected & teams loaded");
-  })
-  .catch(err => {
+  } catch (err) {
     console.error("❌ MongoDB connection failed:", err);
-  });
+    console.error("❌ MONGODB_URI:", process.env.MONGODB_URI);
+  }
+}
+
+connectDb();
+
+// connectDb()
+//   .then(async () => {
+//     await initializeData();
+//     dbReady = true;
+//     console.log("✅ MongoDB connected & teams loaded");
+//   })
+//   .catch(err => {
+//     console.error("❌ MongoDB connection failed:", err);
+//     console.error("❌ MONGODB_URI:", process.env.MONGODB_URI);
+//   });
 
 module.exports = app;
 
