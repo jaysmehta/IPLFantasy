@@ -43,13 +43,13 @@ async function connectDb() {
     dbReady = true;
     console.log(`📊 Loaded ${app.teams.length} teams`);
   } catch (err) {
-    console.error("❌ MongoDB connection failed in handler:", err);
-    console.error("❌ MONGODB_URI:", uri);
+    console.log("❌ MongoDB connection failed in handler:", err);
+    console.log("❌ MONGODB_URI:", uri);
   }
 }
 
 connectDb().catch(err =>
-  console.error("❌ connectDb top‑level error:", err)
+  console.log("❌ connectDb top‑level error:", err)
 );
 
 const serverInstance = http.createServer(app);
