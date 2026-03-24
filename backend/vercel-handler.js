@@ -19,7 +19,7 @@ async function connectDb() {
   console.log("✅ MongoDB connect call in handler");
   const client = new MongoClient(uri);
 
-  const timeout = 20 * 1000; // 12 seconds
+  const timeout = 12 * 1000; // 12 seconds
 
   try {
     const result = await Promise.race([
