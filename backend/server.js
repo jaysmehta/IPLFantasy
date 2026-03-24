@@ -22,6 +22,10 @@ async function loadTeamsFromDb() {
 }
 
 async function saveTeamToDb(team) {
+  if (!teamsCollection) {
+    console.error("MongoDB teamsCollection is not ready yet");
+    throw new Error("Database not connected");
+  }
   await teamsCollection.updateOne(
     { id: team.id },
     { $set: team },
