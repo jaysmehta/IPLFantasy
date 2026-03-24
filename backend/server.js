@@ -10,6 +10,7 @@ let db, teamsCollection;
 let teams = [];
 
 async function connectDb() {
+  console.log("✅ MongoDB connect call");
   await client.connect();
   db = client.db("iplfantasy2026");
   teamsCollection = db.collection("teams");
@@ -20,6 +21,7 @@ async function connectDb() {
 async function loadTeamsFromDb() {
   const cursor = teamsCollection.find({});
   teams = await cursor.toArray();
+  console.log("Success",teams);
 }
 
 async function saveTeamToDb(team) {
