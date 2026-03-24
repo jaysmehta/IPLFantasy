@@ -312,7 +312,7 @@ app.use("*", (req, res) => res.status(404).json({ error: "Not found" }));
 // 🚀 Start Server
 async function startServer() {
   await initializeData();
-  module.exports = { app };
+  module.exports = app;
   // app.listen(PORT, () => {
   //   console.log(`\n🚀 IPL 2026 Fantasy API v2.0`);
   //   console.log(`📡 http://localhost:${PORT}`);
