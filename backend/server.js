@@ -2,6 +2,8 @@
 // --- MONGODB SETUP (replace teams.json) ---
 const { MongoClient } = require("mongodb");
 
+let dbReady = false;
+
 // Get MongoDB URI from environment
 const uri = process.env.MONGODB_URI;
 console.log("check url ",uri);
@@ -84,6 +86,17 @@ const CRICAPI_KEY = process.env.CRICAPI_KEY || "e18c70fc-6fe7-4a3c-94c4-f4241f69
 // Middleware
 app.use(cors());
 app.use(express.json());
+
+app.use(async (req, res, next) => {
+  if (!dbReady) {
+    // If you see this in Vercel logs, DB is still initializing
+    console.log("Database not ready yet, waiting...");
+    return res.status(503).json({ 
+      error: "Database initializing, please retry"
+    });
+  }
+  next();
+});
 
 // File persistence
 // async function loadTeams() {
@@ -524,12 +537,13 @@ app.delete("/api/teams", async (req, res) => {
 
 
 connectDb()
-  .then(() => {
-    console.log("✅ MongoDB fully ready, starting server");
+  .then(async () => {
+    await initializeData();
+    dbReady = true;
+    console.log("✅ MongoDB connected & teams loaded");
   })
   .catch(err => {
     console.error("❌ MongoDB connection failed:", err);
-    process.exit(1);
   });
 
 module.exports = app;
