@@ -47,7 +47,7 @@ if (!teamsCollection) {
 }
 
 // Call this once when the server starts
-connectDb().catch(console.error);
+// connectDb().catch(console.error);
 
 
 // Replace your old loadTeams / saveTeams:
@@ -521,6 +521,15 @@ app.delete("/api/teams", async (req, res) => {
 // 404
 // app.use("*", (req, res) => res.status(404).json({ error: "Not found" }));
 
+
+connectDb()
+  .then(() => {
+    console.log("✅ MongoDB fully ready, starting server");
+  })
+  .catch(err => {
+    console.error("❌ MongoDB connection failed:", err);
+    process.exit(1);
+  });
 
 module.exports = app;
 
