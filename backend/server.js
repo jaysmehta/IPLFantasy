@@ -335,7 +335,7 @@ app.delete("/api/teams", async (req, res) => {
 });
 
 // 404
-app.use("*", (req, res) => res.status(404).json({ error: "Not found" }));
+// app.use("*", (req, res) => res.status(404).json({ error: "Not found" }));
 
 
 module.exports = app;
