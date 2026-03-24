@@ -144,7 +144,7 @@
         document.getElementById("apiStatus").className = isOk ? "pill api-status" : "pill api-status api-error";
         // document.getElementById("apiStatus").textContent = data.cricapi || "Ready";
         // document.getElementById("apiStatus").className = data.cricapi?.includes("✅") ? "pill api-status" : "pill api-status api-error";
-      } catch {
+      } catch (err) {
         console.error("API check failed:", err);
         document.getElementById("apiStatus").textContent = "Backend offline";
         document.getElementById("apiStatus").className = "pill api-status api-error";
