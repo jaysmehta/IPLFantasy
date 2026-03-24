@@ -1,16 +1,17 @@
-console.log("vercel-handler.js invoked");
+const app = require("./server");
+const serverless = require("serverless-http");
 
-// Tiny test handler
-module.exports = async (req, res) => {
-  console.log("Path:", req.url);
+const wrapped = serverless(app);
 
-  if (req.url === "/" || req.url === "/index.html") {
-    res.statusCode = 200;
-    res.setHeader("Content-Type", "text/html");
-    res.end("<h1>Live test</h1>");
-    return;
-  }
+module.exports = (req, res) => {
+  const timeoutId = setTimeout(() => {
+    if (!res.headersSent) {
+      console.error("🚨 Request timed out in handler (fallback)");
+      res.status(500).json({ error: "Backend took too long" });
+    }
+  }, 10_000); // 10 seconds max
 
-  res.statusCode = 404;
-  res.end("Not found");
+  wrapped(req, res, () => {
+    clearTimeout(timeoutId);
+  });
 };
