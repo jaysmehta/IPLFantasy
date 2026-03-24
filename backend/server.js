@@ -170,7 +170,15 @@ function calculateFantasyPoints(players, playerStats) {
 
 // 🛠️ API ROUTES
 
+
 app.get("/", (req, res) => {
+  res.sendFile(path.join(__dirname, "index.html"));
+});
+
+// 2. Static assets (css, js, images, etc.)
+app.use(express.static(__dirname));
+
+app.get("/status", (req, res) => {
   res.json({ 
     status: "ok", 
     service: "IPL 2026 Fantasy API v2.0",
