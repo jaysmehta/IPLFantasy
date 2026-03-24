@@ -181,7 +181,15 @@ app.get("/", (req, res) => {
 });
 
 // 📋 Teams CRUD
-app.get("/api/teams", (req, res) => res.json(teams));
+// app.get("/api/teams", (req, res) => res.json(teams));
+app.get("/api/teams", async (req, res) => {
+  try {
+    res.json(teams);
+  } catch (err) {
+    console.error("/api/teams error:", err);
+    res.status(500).json({ error: "Internal error" });
+  }
+});
 
 app.post("/api/teams", async (req, res) => {
   const { ownerName, teamName, match, players } = req.body;
