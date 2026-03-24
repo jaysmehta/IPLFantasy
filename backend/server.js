@@ -1,4 +1,58 @@
 // server.js - Complete IPL 2026 Fantasy League Backend
+// --- MONGODB SETUP (replace teams.json) ---
+const { MongoClient } = require("mongodb");
+
+// Get MongoDB URI from environment
+const uri = process.env.MONGODB_URI;
+const client = new MongoClient(uri);
+
+let db, teamsCollection;
+let teams = [];
+
+async function connectDb() {
+  await client.connect();
+  db = client.db("iplfantasy2026");
+  teamsCollection = db.collection("teams");
+  console.log("✅ MongoDB connected");
+}
+
+async function loadTeamsFromDb() {
+  const cursor = teamsCollection.find({});
+  teams = await cursor.toArray();
+}
+
+async function saveTeamToDb(team) {
+  await teamsCollection.updateOne(
+    { id: team.id },
+    { $set: team },
+    { upsert: true }
+  );
+}
+
+async function deleteTeamFromDb(id) {
+  await teamsCollection.deleteOne({ id });
+}
+
+// Call this once when the server starts
+connectDb().catch(console.error);
+
+// Replace your old loadTeams / saveTeams:
+async function initializeData() {
+  await loadTeamsFromDb();
+  console.log(`📊 Loaded ${teams.length} teams from MongoDB`);
+}
+
+async function saveTeams() {
+  // optional: bulk insert / update if you prefer
+  for (const t of teams) {
+    await saveTeamToDb(t);
+  }
+}
+// --- MONGODB SETUP END ---
+
+
+
+
 const express = require("express");
 const cors = require("cors");
 const fs = require("fs/promises");
@@ -202,14 +256,42 @@ app.get("/status", (req, res) => {
 
 // 📋 Teams CRUD
 // app.get("/api/teams", (req, res) => res.json(teams));
-app.get("/api/teams", async (req, res) => {
-  try {
-    res.json(teams);
-  } catch (err) {
-    console.error("/api/teams error:", err);
-    res.status(500).json({ error: "Internal error" });
+// app.get("/api/teams", async (req, res) => {
+//   try {
+//     res.json(teams);
+//   } catch (err) {
+//     console.error("/api/teams error:", err);
+//     res.status(500).json({ error: "Internal error" });
+//   }
+// });
+
+app.post("/api/teams", async (req, res) => {
+  const { ownerName, teamName, match, players } = req.body;
+
+  if (!players?.length) {
+    return res.status(400).json({ error: "Players array required" });
   }
+
+  const team = {
+    id: Date.now().toString(),
+    ownerName: ownerName?.trim() || "Anonymous",
+    teamName: teamName?.trim() || "Team XI",
+    match: match || "Practice Match",
+    players: players.map(p => String(p).trim()).filter(Boolean),
+    points: 0,
+    createdAt: new Date().toISOString(),
+    updatedAt: null,
+    playerStats: {},
+    lastScoredAt: null
+  };
+
+  await saveTeamToDb(team);
+  await loadTeamsFromDb(); // optional: fresh list
+
+  res.status(201).json(team);
 });
+
+
 
 app.post("/api/teams", async (req, res) => {
   const { ownerName, teamName, match, players } = req.body;
@@ -233,6 +315,24 @@ app.post("/api/teams", async (req, res) => {
   res.status(201).json(team);
 });
 
+// app.patch("/api/teams/:id/points", async (req, res) => {
+//   const { id } = req.params;
+//   const { delta } = req.body;
+
+//   const team = teams.find(t => t.id === id);
+//   if (!team) return res.status(404).json({ error: "Team not found" });
+
+//   const change = Number(delta);
+//   if (isNaN(change) || change === 0) {
+//     return res.status(400).json({ error: "Valid delta required" });
+//   }
+
+//   team.points += change;
+//   team.updatedAt = new Date().toISOString();
+//   await saveTeams(teams);
+//   res.json(team);
+// });
+
 app.patch("/api/teams/:id/points", async (req, res) => {
   const { id } = req.params;
   const { delta } = req.body;
@@ -247,9 +347,14 @@ app.patch("/api/teams/:id/points", async (req, res) => {
 
   team.points += change;
   team.updatedAt = new Date().toISOString();
-  await saveTeams(teams);
+
+  await saveTeamToDb(team);
+  await loadTeamsFromDb(); // update global list
+
   res.json(team);
 });
+
+
 
 app.get("/api/teams/:id", (req, res) => {
   const team = teams.find(t => t.id === req.params.id);
@@ -257,14 +362,29 @@ app.get("/api/teams/:id", (req, res) => {
   res.json(team);
 });
 
+
 app.delete("/api/teams/:id", async (req, res) => {
   const idx = teams.findIndex(t => t.id === req.params.id);
   if (idx === -1) return res.status(404).json({ error: "Team not found" });
-  
+
   teams.splice(idx, 1);
-  await saveTeams(teams);
+  await deleteTeamFromDb(req.params.id);
+  await loadTeamsFromDb();
+
   res.json({ message: "Team deleted" });
 });
+
+
+
+
+// app.delete("/api/teams/:id", async (req, res) => {
+//   const idx = teams.findIndex(t => t.id === req.params.id);
+//   if (idx === -1) return res.status(404).json({ error: "Team not found" });
+  
+//   teams.splice(idx, 1);
+//   await saveTeams(teams);
+//   res.json({ message: "Team deleted" });
+// });
 
 // 🏏 CRICAPI + LIVE SCORING
 app.get("/api/matches", async (req, res) => {
@@ -285,19 +405,17 @@ app.post("/api/teams/:id/calculate-points", async (req, res) => {
   if (!team) return res.status(404).json({ error: "Team not found" });
 
   try {
-    // Get live match data
     const matchData = await getMatchScore(team.match);
-    
-    // Calculate real fantasy points
     const playerStats = await getPlayerStats(team.players, matchData);
     const totalPoints = calculateFantasyPoints(team.players, playerStats);
     const delta = totalPoints - team.points;
 
-    // Update team
     team.points = totalPoints;
-    team.playerStats = playerStats; // For frontend display
+    team.playerStats = playerStats;
     team.lastScoredAt = new Date().toISOString();
-    await saveTeams(teams);
+
+    await saveTeamToDb(team);
+    await loadTeamsFromDb();
 
     res.json({
       team,
@@ -306,18 +424,18 @@ app.post("/api/teams/:id/calculate-points", async (req, res) => {
       playerStats,
       message: `Auto-scored ${totalPoints} points! (${delta >= 0 ? '+' : ''}${delta})`
     });
-
   } catch (err) {
     console.error("Auto-score error:", err);
-    
-    // Graceful fallback scoring
+
     const fallbackPoints = Math.floor(Math.random() * 250) + 75;
     const delta = fallbackPoints - team.points;
-    
+
     team.points = fallbackPoints;
     team.lastScoredAt = new Date().toISOString();
-    await saveTeams(teams);
-    
+
+    await saveTeamToDb(team);
+    await loadTeamsFromDb();
+
     res.json({
       team,
       delta,
@@ -326,6 +444,58 @@ app.post("/api/teams/:id/calculate-points", async (req, res) => {
     });
   }
 });
+
+
+
+
+
+// app.post("/api/teams/:id/calculate-points", async (req, res) => {
+//   const { id } = req.params;
+//   const team = teams.find(t => t.id === id);
+//   if (!team) return res.status(404).json({ error: "Team not found" });
+
+//   try {
+//     // Get live match data
+//     const matchData = await getMatchScore(team.match);
+    
+//     // Calculate real fantasy points
+//     const playerStats = await getPlayerStats(team.players, matchData);
+//     const totalPoints = calculateFantasyPoints(team.players, playerStats);
+//     const delta = totalPoints - team.points;
+
+//     // Update team
+//     team.points = totalPoints;
+//     team.playerStats = playerStats; // For frontend display
+//     team.lastScoredAt = new Date().toISOString();
+//     await saveTeams(teams);
+
+//     res.json({
+//       team,
+//       delta,
+//       totalPoints,
+//       playerStats,
+//       message: `Auto-scored ${totalPoints} points! (${delta >= 0 ? '+' : ''}${delta})`
+//     });
+
+//   } catch (err) {
+//     console.error("Auto-score error:", err);
+    
+//     // Graceful fallback scoring
+//     const fallbackPoints = Math.floor(Math.random() * 250) + 75;
+//     const delta = fallbackPoints - team.points;
+    
+//     team.points = fallbackPoints;
+//     team.lastScoredAt = new Date().toISOString();
+//     await saveTeams(teams);
+    
+//     res.json({
+//       team,
+//       delta,
+//       totalPoints: fallbackPoints,
+//       message: `Fallback: ${fallbackPoints} pts (CricAPI unavailable)`
+//     });
+//   }
+// });
 
 // 🗑️ Reset (admin)
 app.delete("/api/teams", async (req, res) => {
