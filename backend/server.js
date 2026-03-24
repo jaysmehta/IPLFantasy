@@ -4,6 +4,7 @@ const { MongoClient } = require("mongodb");
 
 // Get MongoDB URI from environment
 const uri = process.env.MONGODB_URI;
+console.log("check url ",uri);
 const client = new MongoClient(uri);
 
 let db, teamsCollection;
