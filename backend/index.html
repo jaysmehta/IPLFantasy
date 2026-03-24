@@ -135,10 +135,18 @@
       try {
         const res = await fetch(`${API_BASE}/`);
         const data = await res.json();
-        console.log(res.json());
-        document.getElementById("apiStatus").textContent = data.cricapi || "Ready";
-        document.getElementById("apiStatus").className = data.cricapi?.includes("✅") ? "pill api-status" : "pill api-status api-error";
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const data = await res.json();
+        console.log("API check:", data); // ✅
+
+        const text = data.cricapi || "Active";
+        const isOk = text?.includes("✅");
+        document.getElementById("apiStatus").textContent = text;
+        document.getElementById("apiStatus").className = isOk ? "pill api-status" : "pill api-status api-error";
+        // document.getElementById("apiStatus").textContent = data.cricapi || "Ready";
+        // document.getElementById("apiStatus").className = data.cricapi?.includes("✅") ? "pill api-status" : "pill api-status api-error";
       } catch {
+        console.error("API check failed:", err);
         document.getElementById("apiStatus").textContent = "Backend offline";
         document.getElementById("apiStatus").className = "pill api-status api-error";
       }
