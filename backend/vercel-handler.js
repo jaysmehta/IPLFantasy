@@ -1,4 +1,7 @@
-const app = require("./server");
-const serverless = require("serverless-http");
+const server = require("./server");
+const http = require("http");
 
-module.exports = serverless(app);
+module.exports = (req, res) => {
+  const serverInstance = http.createServer(server);
+  serverInstance.emit("request", req, res);
+};
