@@ -19,16 +19,13 @@ async function connectDb() {
   console.log("✅ MongoDB connect call in handler");
   const client = new MongoClient(uri);
 
-  const timeout = 10 * 1000; // 10 seconds
+  const timeout = 12 * 1000; // 12 seconds
 
   try {
     const result = await Promise.race([
       client.connect(),
       new Promise((_, reject) => {
-        setTimeout(
-          () => reject(new Error("MongoDB connect timeout")),
-          timeout
-        );
+        setTimeout(() => reject(new Error("MongoDB connect timeout")), timeout);
       })
     ]);
 
@@ -36,6 +33,7 @@ async function connectDb() {
     const teamsCollection = db.collection("teams");
 
     console.log("✅ MongoDB connected in handler");
+    console.log("📊 Collection", teamsCollection.s.namespace);
 
     // Inject into app
     app.db = db;
@@ -67,3 +65,4 @@ module.exports = (req, res) => {
   }
   serverInstance.emit("request", req, res);
 };
+
