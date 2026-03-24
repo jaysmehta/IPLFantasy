@@ -84,7 +84,7 @@ async function saveTeams(teams) {
   await fs.writeFile(DATA_FILE, JSON.stringify(teams, null, 2), "utf8");
 }
 
-let teams = [];
+//let teams = [];
 
 async function initializeData() {
   teams = await loadTeams();
