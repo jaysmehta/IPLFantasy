@@ -29,7 +29,7 @@
     .field-group { display: flex; flex-direction: column; gap: 6px; margin-top: 8px; }
     label { font-size: 0.75rem; color: var(--muted); }
     input, select { width: 100%; padding: 8px 9px; border-radius: 10px; border: 1px solid rgba(51,65,85,0.9); background: rgba(15,23,42,0.9); color: var(--text); font-size: 0.8rem; outline: none; }
-    input:focus, select:focus { border-color: var(--primary); box-shadow: 0 0 0 1px rgba(45,212,191,0.25); }
+    input:focus, select:focus { border-color: var(--primary); box-shadow: 0 0 0 1px rgba(45,212,194,0.25); }
     .btn-primary { width: 100%; margin-top: 10px; border-radius: 999px; border: none; padding: 9px 12px; font-size: 0.85rem; font-weight: 600; background: linear-gradient(135deg, #22c55e, #0ea5e9); color: #020617; box-shadow: 0 10px 25px rgba(34,197,94,0.45); }
     .small { font-size: 0.7rem; color: var(--muted); margin-top: 6px; }
     .team-row { display: flex; align-items: center; justify-content: space-between; padding: 6px 0; font-size: 0.8rem; }
@@ -99,7 +99,7 @@
           <div><div class="card-title">My Teams</div><div class="card-subtitle">Auto-score with real stats</div></div>
           <span class="badge" id="teams-count">0</span>
         </div>
-        <div id="teamList"><div class="small">Create your first team!</div></div>
+        <div id="teamList"><div class="small">Create your first fantasy XI!</div></div>
       </section>
 
       <!-- LEADERBOARD -->
@@ -142,8 +142,6 @@
         const isOk = text?.includes("✅");
         document.getElementById("apiStatus").textContent = text;
         document.getElementById("apiStatus").className = isOk ? "pill api-status" : "pill api-status api-error";
-        // document.getElementById("apiStatus").textContent = data.cricapi || "Ready";
-        // document.getElementById("apiStatus").className = data.cricapi?.includes("✅") ? "pill api-status" : "pill api-status api-error";
       } catch (err) {
         console.error("API check failed:", err);
         document.getElementById("apiStatus").textContent = "Backend offline";
@@ -161,7 +159,8 @@
         matches.slice(0, 15).forEach(match => {
           const option = document.createElement("option");
           option.value = match.id;
-          option.textContent = `${match.name || match.series?.name} — ${match.venue?.name || "TBD"} (${new Date(match.date).toLocaleDateString()})`;
+          // Show only the match name in the dropdown
+          option.textContent = match.name || match.series?.name;
           select.appendChild(option);
         });
       } catch (err) {
@@ -181,7 +180,7 @@
       }
     }
 
-    // Render teams list
+    // Render teams list (with match)
     function renderTeams() {
       const list = document.getElementById("teamList");
       const count = document.getElementById("teams-count");
@@ -207,7 +206,12 @@
         
         const meta = document.createElement("div");
         meta.className = "owner-name";
-        meta.textContent = `${t.ownerName} • ${t.match}`;
+        meta.innerHTML = `
+          ${t.ownerName}
+          <span style="font-size:0.65rem; color: #9ca3af; margin-left: 4px;">
+            • Match: ${t.match}
+          </span>
+        `;
         
         const players = document.createElement("div");
         players.className = "player-chips";
@@ -302,7 +306,7 @@
       });
     }
 
-    // Render leaderboard
+    // Render leaderboard (with match)
     function renderLeaderboard() {
       const list = document.getElementById("leaderboardList");
       const sorted = [...teams].sort((a, b) => b.points - a.points);
@@ -323,49 +327,5 @@
         pos.textContent = (idx + 1) + ".";
         
         const teamInfo = document.createElement("div");
-        teamInfo.innerHTML = `<div class="team-name">${t.teamName}</div><div class="owner-name">${t.ownerName}</div>`;
-        
-        const points = document.createElement("div");
-        points.className = "points-pill";
-        points.textContent = t.points + " pts";
-        
-        row.append(pos, teamInfo, points);
-        list.appendChild(row);
-      });
-    }
-
-    // Save team
-    document.getElementById("saveTeamBtn").addEventListener("click", async () => {
-      const ownerName = document.getElementById("ownerName").value.trim() || "Manager";
-      const teamName = document.getElementById("teamName").value.trim() || "Untitled";
-      const match = document.getElementById("matchSelect").value || "Practice match";
-      const playersRaw = document.getElementById("playersInput").value.trim();
-
-      if (!playersRaw) return alert("Add players!");
-
-      const players = playersRaw.split(",").map(p => p.trim()).filter(Boolean);
-
-      const res = await fetch(`${API_BASE}/api/teams`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ownerName, teamName, match, players })
-      });
-
-      if (res.ok) {
-        loadTeams();
-        document.getElementById("playersInput").value = "";
-        alert("✅ Team created! Check My Teams tab");
-      } else {
-        const err = await res.json();
-        alert("Error: " + (err.error || "Server error"));
-      }
-    });
-
-    // Initialize
-    checkAPI();
-    loadLiveMatches();
-    loadTeams();
-    setInterval(checkAPI, 30000); // Check API every 30s
-  </script>
-</body>
-</html>
+        teamInfo.innerHTML = `
+          <div
