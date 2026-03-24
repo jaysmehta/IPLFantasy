@@ -171,8 +171,20 @@ function calculateFantasyPoints(players, playerStats) {
 // 🛠️ API ROUTES
 
 
+// app.get("/", (req, res) => {
+//   res.sendFile(path.join(__dirname, "index.html"));
+// });
+
 app.get("/", (req, res) => {
-  res.sendFile(path.join(__dirname, "index.html"));
+  console.log("GET /: serving plain HTML inline");
+  res.setHeader("Content-Type", "text/html");
+  res.end(`
+    <!DOCTYPE html>
+    <html>
+      <head><title>IPL Fantasy</title></head>
+      <body><h1>Live</h1></body>
+    </html>
+  `);
 });
 
 // 2. Static assets (css, js, images, etc.)
