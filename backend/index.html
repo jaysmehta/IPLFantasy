@@ -133,7 +133,7 @@
     // API Status
     async function checkAPI() {
       try {
-        const res = await fetch(`${API_BASE}/`);
+        const res = await fetch(`${API_BASE}/status`);
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
         const data = await res.json();
         console.log("API check:", data); // ✅
