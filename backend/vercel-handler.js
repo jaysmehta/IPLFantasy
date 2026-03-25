@@ -135,27 +135,42 @@ async function connectDb() {
   };
 
   try {
-    await mongoose.connect(MONGODB_URI, options);
 
-    console.log("✅ MongoDB connected in handler (Mongoose)");
-    dbReady = true;
 
-    // Example: attach models / collections
-    const Team = mongoose.model(
-      "Team",
-      new mongoose.Schema({
-        name: String,
-        players: [String],
-        // ... your fields
-      })
-    );
+    mongoose.connect(uri)
+  .then(() => {
+    console.log('✅ Connected successfully to MongoDB Atlas!');
+    return mongoose.connection.db.admin().ping();
+  })
+  .then(() => {
+    console.log('Ping successful!');
+    process.exit(0);
+  })
+  .catch(err => {
+    console.error('❌ Connection failed:', err.message);
+    process.exit(1);
+  });
+    // await mongoose.connect(MONGODB_URI, options);
+
+    // console.log("✅ MongoDB connected in handler (Mongoose)");
+    // dbReady = true;
+
+    // // Example: attach models / collections
+    // const Team = mongoose.model(
+    //   "Team",
+    //   new mongoose.Schema({
+    //     name: String,
+    //     players: [String],
+    //     // ... your fields
+    //   })
+    // );
 
     // If you still want plain `teams` array on app
-    const teams = await Team.find({}); // all teams
-    app.db = mongoose.connection; // or app.mongoose = mongoose
-    app.teams = teams;
+    // const teams = await Team.find({}); // all teams
+    // app.db = mongoose.connection; // or app.mongoose = mongoose
+    // app.teams = teams;
 
-    console.log(`📊 Loaded ${teams.length} teams`);
+    // console.log(`📊 Loaded ${teams.length} teams`);
   } catch (err) {
     console.error("❌ MongoDB connection failed in handler (Mongoose):", err);
   }
