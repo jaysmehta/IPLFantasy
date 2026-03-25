@@ -10,11 +10,6 @@
 
 
 
-
-
-
-
-
 const { MongoClient } = require("mongodb");
 const app = require("./server");
 const http = require("http");
@@ -32,8 +27,7 @@ let dbReady = false;
 
 async function connectDb() {
 
-
-
+console.log("✅ MongoDB connect call in handler");
   const client = new MongoClient(uri, options);
 
   try {
