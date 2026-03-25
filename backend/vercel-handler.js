@@ -137,7 +137,7 @@ async function connectDb() {
   try {
 
 
-    mongoose.connect(MONGODB_URI)
+  mongoose.connect(MONGODB_URI)
   .then(() => {
     console.log('✅ Connected successfully to MongoDB Atlas!');
     return mongoose.connection.db.admin().ping();
@@ -148,6 +148,7 @@ async function connectDb() {
   })
   .catch(err => {
     console.error('❌ Connection failed:', err.message);
+    console.log("MongoDB connection failed ",err.message);
     process.exit(1);
   });
     // await mongoose.connect(MONGODB_URI, options);
@@ -173,6 +174,7 @@ async function connectDb() {
     // console.log(`📊 Loaded ${teams.length} teams`);
   } catch (err) {
     console.error("❌ MongoDB connection failed in handler (Mongoose):", err);
+    console.log("MongoDB connection failed ",err.message);
   }
 }
 
