@@ -1,10 +1,10 @@
 // vercel-handler.js
 
-const { MongoClient } = require("mongodb");
+const mongoose = require("mongoose");
 const app = require("./server");
 const http = require("http");
 
-const uri = process.env.MONGODB_URI;
+const MONGODB_URI = process.env.MONGODB_URI;
 
 let dbReady = false;
 
@@ -17,33 +17,35 @@ function connectDb() {
     maxPoolSize: 10,
   };
 
-  const client = new MongoClient(uri, options);
-
-  // Use promises; no await
-  client
-    .connect()
+  mongoose
+    .connect(MONGODB_URI, options)
     .then(() => {
-      console.log("✅ MongoDB connected in handler");
-
-      const db = client.db("iplfantasy2026");
-      const teamsCollection = db.collection("teams");
-
-      app.db = db;
-      app.teamsCollection = teamsCollection;
-
-      return teamsCollection.find({}).toArray();
-    })
-    .then((teams) => {
-      app.teams = teams;
+      console.log("✅ MongoDB connected in handler (Mongoose)");
       dbReady = true;
-      console.log(`📊 Loaded ${teams.length} teams`);
+
+      // Example: define a Team model and preload teams
+      const Team = mongoose.model(
+        "Team",
+        new mongoose.Schema({
+          name: String,
+          players: [String],
+          // ... your fields
+        })
+      );
+
+      Team.find({})
+        .then((teams) => {
+          app.db = mongoose.connection;
+          app.teams = teams;
+
+          console.log(`📊 Loaded ${teams.length} teams`);
+        })
+        .catch((err) => {
+          console.error("❌ Failed to load teams:", err);
+        });
     })
     .catch((err) => {
-      console.error("❌ MongoDB connection failed in handler:", err);
-    })
-    .finally(() => {
-      // In a serverless context, you typically don’t close here.
-      // If you ever want to, expose client on app and close per request.
+      console.error("❌ MongoDB connection failed in handler (Mongoose):", err);
     });
 }
 
