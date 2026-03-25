@@ -137,7 +137,7 @@ async function connectDb() {
   try {
 
 
-    mongoose.connect(uri)
+    mongoose.connect(MONGODB_URI)
   .then(() => {
     console.log('✅ Connected successfully to MongoDB Atlas!');
     return mongoose.connection.db.admin().ping();
