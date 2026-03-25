@@ -1,10 +1,8 @@
-// vercel-handler.js
-
-const mongoose = require("mongoose");
+const { MongoClient } = require("mongodb");
 const app = require("./server");
 const http = require("http");
 
-const MONGODB_URI = process.env.MONGODB_URI;
+const uri = process.env.MONGODB_URI;
 
 let dbReady = false;
 
@@ -17,40 +15,34 @@ function connectDb() {
     maxPoolSize: 10,
   };
 
-  mongoose
-    .connect(MONGODB_URI, options)
+  const client = new MongoClient(uri, options);
+
+  client
+    .connect()
     .then(() => {
-      console.log("✅ MongoDB connected in handler (Mongoose)");
+      console.log("✅ MongoDB connected in handler");
+
+      const db = client.db("iplfantasy2026");
+      const teamsCollection = db.collection("teams");
+
+      app.db = db;
+      app.teamsCollection = teamsCollection;
+
+      return teamsCollection.find({}).toArray();
+    })
+    .then((teams) => {
+      app.teams = teams;
       dbReady = true;
-
-      // Example: define a Team model and preload teams
-      const Team = mongoose.model(
-        "Team",
-        new mongoose.Schema({
-          name: String,
-          players: [String],
-          // ... your fields
-        })
-      );
-
-      Team.find({})
-        .then((teams) => {
-          app.db = mongoose.connection;
-          app.teams = teams;
-
-          console.log(`📊 Loaded ${teams.length} teams`);
-        })
-        .catch((err) => {
-          console.error("❌ Failed to load teams:", err);
-        });
+      console.log(`📊 Loaded ${teams.length} teams`);
     })
     .catch((err) => {
-      console.error("❌ MongoDB connection failed in handler (Mongoose):", err);
-      console.log("❌ MongoDB connection failed in handler (Mongoose):", err.message);
+      console.error("❌ MongoDB connection failed in handler:", err);
+    })
+    .finally(() => {
+      console.info("📍 MongoDB connect finally (success or fail)");
     });
 }
 
-// Top‑level: just call the plain function
 connectDb();
 
 const serverInstance = http.createServer(app);
@@ -62,6 +54,7 @@ module.exports = (req, res) => {
     res.end(
       JSON.stringify({ error: "Database initializing, please retry" })
     );
+    console.log("❗ Request blocked: dbReady = false");
     return;
   }
   serverInstance.emit("request", req, res);
