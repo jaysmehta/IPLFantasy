@@ -31,12 +31,13 @@ function connectDb() {
 
       app.db = db;
       app.teamsCollection = teamsCollection;
+      dbReady = true;
 
       return teamsCollection.find({}).toArray();
     })
     .then((teams) => {
       app.teams = teams;
-      dbReady = true;
+      
       console.log(`📊 Loaded ${teams.length} teams`);
     })
     .catch((err) => {
