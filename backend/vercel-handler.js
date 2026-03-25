@@ -1,14 +1,4 @@
-// const server = require("./server");
-// const http = require("http");
-
-// module.exports = (req, res) => {
-//   const serverInstance = http.createServer(server);
-//   serverInstance.emit("request", req, res);
-// };
-
-// backend/vercel-handler.js
-
-
+// vercel-handler.js
 
 const { MongoClient } = require("mongodb");
 const app = require("./server");
@@ -16,90 +6,51 @@ const http = require("http");
 
 const uri = process.env.MONGODB_URI;
 
-const options = {
-  serverSelectionTimeoutMS: 10_000, // 10 seconds
-  connectTimeoutMS: 10_000,
-  socketTimeoutMS: 15_000,
-  maxPoolSize: 10,
-};
-
 let dbReady = false;
 
 function connectDb() {
+  console.log("✅ MongoDB connect call in handler");
 
-console.log("✅ MongoDB connect call in handler");
+  const options = {
+    serverSelectionTimeoutMS: 10_000,
+    socketTimeoutMS: 15_000,
+    maxPoolSize: 10,
+  };
+
   const client = new MongoClient(uri, options);
 
-  try {
-    console.log("within connect try");
-    await Promise.race([
-      client.connect(),
-      new Promise((_, reject) =>
-        setTimeout(() => reject(new Error("Mongo connect timeout")), 12_000)
+  // Use promises; no await
+  client
+    .connect()
+    .then(() => {
+      console.log("✅ MongoDB connected in handler");
 
-      ),
-    ]);
+      const db = client.db("iplfantasy2026");
+      const teamsCollection = db.collection("teams");
 
-    const db = client.db("iplfantasy2026");
-    console.log("post DB");
-    const teamsCollection = db.collection("teams");
+      app.db = db;
+      app.teamsCollection = teamsCollection;
 
-    app.db = db;
-    app.teamsCollection = teamsCollection;
-    app.teams = await teamsCollection.find({}).toArray();
-
-    console.log("✅ MongoDB connected in handler", app.teams.length);
-    dbReady = true;
-  } catch (err) {
-    console.error("❌ MongoDB connection failed in handler:", err);
-  }
+      return teamsCollection.find({}).toArray();
+    })
+    .then((teams) => {
+      app.teams = teams;
+      dbReady = true;
+      console.log(`📊 Loaded ${teams.length} teams`);
+    })
+    .catch((err) => {
+      console.error("❌ MongoDB connection failed in handler:", err);
+    })
+    .finally(() => {
+      // In a serverless context, you typically don’t close here.
+      // If you ever want to, expose client on app and close per request.
+    });
 }
 
+// Top‑level: just call the plain function
+connectDb();
 
-
-
-//   console.log("✅ MongoDB connect call in handler");
-//   const client = new MongoClient(uri);
-
-//   const timeout = 12 * 1000; // 12 seconds
-
-//   try {
-//     const result = await Promise.race([
-//       client.connect(),
-//       new Promise((_, reject) => {
-//         setTimeout(() => reject(new Error("MongoDB connect timeout")), timeout);
-//       })
-//     ]);
-
-//     const db = client.db("iplfantasy2026");
-//     const teamsCollection = db.collection("teams");
-
-//     console.log("✅ MongoDB connected in handler");
-//     console.log("📊 Collection", teamsCollection.s.namespace);
-
-//     // Inject into app
-//     app.db = db;
-//     app.teamsCollection = teamsCollection;
-//     app.teams = await teamsCollection.find({}).toArray();
-
-//     dbReady = true;
-//     console.log(`📊 Loaded ${app.teams.length} teams`);
-//   } catch (err) {
-//     console.log("❌ MongoDB connection failed in handler:", err);
-//     console.log("❌ MONGODB_URI:", uri);
-//   }
-// }
-
-// connectDb().catch(err =>
-//   console.log("❌ connectDb top‑level error:", err)
-// );
-
-connectDb().catch(err => {
-  console.error("❌ connectDb top‑level error:", err);
-  console.log("Error ",err);
-});
-
-// const serverInstance = http.createServer(app);
+const serverInstance = http.createServer(app);
 
 module.exports = (req, res) => {
   if (!dbReady && req.url.startsWith("/api/")) {
@@ -112,28 +63,3 @@ module.exports = (req, res) => {
   }
   serverInstance.emit("request", req, res);
 };
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
