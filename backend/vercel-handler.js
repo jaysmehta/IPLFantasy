@@ -10,15 +10,19 @@ function connectDb() {
   console.log("✅ MongoDB connect call in handler");
 
   const options = {
-    serverSelectionTimeoutMS: 10_000,
-    socketTimeoutMS: 15_000,
+    serverSelectionTimeoutMS: 5_000, // 5 seconds
+    socketTimeoutMS: 10_000,
     maxPoolSize: 10,
   };
 
   const client = new MongoClient(uri, options);
 
-  client
-    .connect()
+  // Force timeout after 8 seconds
+  const timeoutPromise = new Promise((_, reject) =>
+    setTimeout(() => reject(new Error("Mongo connect timeout")), 8_000)
+  );
+
+  Promise.race([client.connect(), timeoutPromise])
     .then(() => {
       console.log("✅ MongoDB connected in handler");
 
@@ -39,7 +43,7 @@ function connectDb() {
       console.error("❌ MongoDB connection failed in handler:", err);
     })
     .finally(() => {
-      console.info("📍 MongoDB connect finally (success or fail)");
+      console.info("📍 MongoDB connect finally");
     });
 }
 
