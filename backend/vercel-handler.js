@@ -46,6 +46,7 @@ function connectDb() {
     })
     .catch((err) => {
       console.error("❌ MongoDB connection failed in handler (Mongoose):", err);
+      console.log("❌ MongoDB connection failed in handler (Mongoose):", err.message);
     });
 }
 
