@@ -170,6 +170,9 @@
 
     // Load teams from backend
     async function loadTeams() {
+
+      console.log("Load Teams Called",teams);
+
       try {
         const res = await fetch(`${API_BASE}/api/teams`);
         teams = await res.json();
