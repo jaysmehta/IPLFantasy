@@ -125,7 +125,7 @@ const MONGODB_URI = process.env.MONGODB_URI;
 
 let dbReady = false;
 
-async function connectDb() {
+function connectDb() {
   console.log("✅ MongoDB connect call in handler mongoose");
 
   const options = {
@@ -181,6 +181,7 @@ async function connectDb() {
 // Top‑level error handling
 connectDb().catch((err) => {
   console.error("❌ connectDb top‑level error (Mongoose):", err);
+  console.log("MongoDB connection failed ",err.message);
 });
 
 const serverInstance = http.createServer(app);
