@@ -283,7 +283,7 @@ app.get("/status", (req, res) => {
 });
 
 // 📋 Teams CRUD
-// app.get("/api/teams", (req, res) => res.json(teams));
+app.get("/api/teams", (req, res) => res.json(teams));
 // app.get("/api/teams", async (req, res) => {
 //   try {
 //     res.json(teams);
@@ -321,27 +321,27 @@ app.post("/api/teams", async (req, res) => {
 
 
 
-app.post("/api/teams", async (req, res) => {
-  const { ownerName, teamName, match, players } = req.body;
+// app.post("/api/teams", async (req, res) => {
+//   const { ownerName, teamName, match, players } = req.body;
   
-  if (!players?.length) {
-    return res.status(400).json({ error: "Players array required" });
-  }
+//   if (!players?.length) {
+//     return res.status(400).json({ error: "Players array required" });
+//   }
 
-  const team = {
-    id: Date.now().toString(),
-    ownerName: ownerName?.trim() || "Anonymous",
-    teamName: teamName?.trim() || "Team XI",
-    match: match || "Practice Match",
-    players: players.map(p => String(p).trim()).filter(Boolean),
-    points: 0,
-    createdAt: new Date().toISOString()
-  };
+//   const team = {
+//     id: Date.now().toString(),
+//     ownerName: ownerName?.trim() || "Anonymous",
+//     teamName: teamName?.trim() || "Team XI",
+//     match: match || "Practice Match",
+//     players: players.map(p => String(p).trim()).filter(Boolean),
+//     points: 0,
+//     createdAt: new Date().toISOString()
+//   };
 
-  teams.push(team);
-  await saveTeams(teams);
-  res.status(201).json(team);
-});
+//   teams.push(team);
+//   await saveTeams(teams);
+//   res.status(201).json(team);
+// });
 
 // app.patch("/api/teams/:id/points", async (req, res) => {
 //   const { id } = req.params;
