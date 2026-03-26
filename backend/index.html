@@ -1,4 +1,4 @@
-<!--
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -186,129 +186,195 @@
 
     // Render teams list (with match)
     function renderTeams() {
-      const list = document.getElementById("teamList");
-      const count = document.getElementById("teams-count");
-      
-      if (!teams.length) {
-        list.innerHTML = '<div class="small">Create your first fantasy XI!</div>';
-        count.textContent = "0 teams";
-        return;
-      }
+  const list = document.getElementById("teamList");
+  const count = document.getElementById("teams-count");
 
-      count.textContent = teams.length;
-      list.innerHTML = "";
+  if (!teams.length) {
+    list.innerHTML = '<div class="small">Create your first fantasy XI!</div>';
+    count.textContent = "0";
+    return;
+  }
 
-      teams.forEach(t => {
-        const row = document.createElement("div");
-        row.className = "team-row";
+  count.textContent = String(teams.length);
+  list.innerHTML = "";
+  
+  teams.forEach(t => {
+    const row = document.createElement("div");
+    row.className = "team-row";
 
-        // Left side
-        const left = document.createElement("div");
-        const name = document.createElement("div");
-        name.className = "team-name";
-        name.textContent = t.teamName;
-        
-        const meta = document.createElement("div");
-        meta.className = "owner-name";
-        meta.innerHTML = `
-          ${t.ownerName}
-          <span style="font-size:0.65rem; color: #9ca3af; margin-left: 4px;">
-            • Match: ${t.match}
-          </span>
-        `;
-        
-        const players = document.createElement("div");
-        players.className = "player-chips";
-        (t.players || []).slice(0, 4).forEach(p => {
-          const chip = document.createElement("span");
-          chip.className = "chip";
-          chip.textContent = p;
-          players.appendChild(chip);
-        });
-        if (t.players.length > 4) {
-          const more = document.createElement("span");
-          more.className = "chip";
-          more.textContent = `+${t.players.length - 4}`;
-          players.appendChild(more);
-        }
+    // Left side
+    const left = document.createElement("div");
 
-        left.append(name, meta, players);
+    const name = document.createElement("div");
+    name.className = "team-name";
+    name.textContent = t.teamName;
 
-        // Right side: Points + buttons
-        const right = document.createElement("div");
-        right.style.textAlign = "right";
-        right.style.minWidth = "120px";
+    const meta = document.createElement("div");
+    meta.className = "owner-name";
+    meta.innerHTML = `
+      ${t.ownerName}
+      <span style="font-size:0.65rem; color:#9ca3af; margin-left:4px;">
+        • Match: ${t.match}
+      </span>
+    `;
 
-        const pointsPill = document.createElement("div");
-        pointsPill.className = "points-pill";
-        pointsPill.textContent = t.points + " pts";
-
-        const input = document.createElement("input");
-        input.type = "number";
-        input.placeholder = "+/- pts";
-        input.style.width = "45px";
-        input.style.marginTop = "4px";
-        input.style.textAlign = "center";
-
-        const updateBtn = document.createElement("button");
-        updateBtn.textContent = "Update";
-        updateBtn.style.fontSize = "0.65rem";
-        updateBtn.style.padding = "2px 6px";
-        updateBtn.style.marginLeft = "2px";
-
-        const autoScoreBtn = document.createElement("button");
-        autoScoreBtn.textContent = "Auto";
-        autoScoreBtn.style.fontSize = "0.65rem";
-        autoScoreBtn.style.padding = "2px 6px";
-        autoScoreBtn.style.background = "linear-gradient(135deg, #8b5cf6, #a855f7)";
-        autoScoreBtn.style.color = "white";
-        autoScoreBtn.style.border = "none";
-        autoScoreBtn.style.borderRadius = "999px";
-
-        // Update button handler
-        updateBtn.addEventListener("click", async () => {
-          const delta = Number(input.value || 0);
-          if (isNaN(delta) || delta === 0) return alert("Enter points change");
-          
-          const res = await fetch(`${API_BASE}/api/teams/${t.id}/points`, {
-            method: "PATCH",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ delta })
-          });
-          
-          if (res.ok) {
-            const data = await res.json();
-            const idx = teams.findIndex(x => x.id === data.id);
-            teams[idx] = data;
-            renderTeams();
-          }
-        });
-
-        // Auto-score button handler
-        autoScoreBtn.addEventListener("click", async () => {
-          autoScoreBtn.disabled = true;
-          autoScoreBtn.textContent = "⏳";
-          
-          const res = await fetch(`${API_BASE}/api/teams/${t.id}/calculate-points`, { method: "POST" });
-          
-          if (res.ok) {
-            const data = await res.json();
-            const idx = teams.findIndex(x => x.id === data.team.id);
-            teams[idx] = data.team;
-            renderTeams();
-          } else {
-            alert("Auto-scoring failed");
-          }
-          
-          autoScoreBtn.disabled = false;
-          autoScoreBtn.textContent = "Auto";
-        });
-
-        right.append(pointsPill, input, updateBtn, autoScoreBtn);
-        row.append(left, right);
-        list.appendChild(row);
-      });
+    const players = document.createElement("div");
+    players.className = "player-chips";
+    t.players.slice(0, 4).forEach(p => {
+      const chip = document.createElement("span");
+      chip.className = "chip";
+      chip.textContent = p;
+      players.appendChild(chip);
+    });
+    if (t.players.length > 4) {
+      const more = document.createElement("span");
+      more.className = "chip";
+      more.textContent = `+${t.players.length - 4}`;
+      players.appendChild(more);
     }
+
+    left.append(name, meta, players);
+
+    // Right side: points ONLY (no input / update / auto)
+    const right = document.createElement("div");
+    right.style.textAlign = "right";
+    right.style.minWidth = "100px";
+
+    const pointsPill = document.createElement("div");
+    pointsPill.className = "points-pill";
+    pointsPill.textContent = `${t.points} pts`;
+
+    right.append(pointsPill);
+
+    row.append(left, right);
+    list.appendChild(row);
+  });
+}
+
+    // function renderTeams() {
+    //   const list = document.getElementById("teamList");
+    //   const count = document.getElementById("teams-count");
+      
+    //   if (!teams.length) {
+    //     list.innerHTML = '<div class="small">Create your first fantasy XI!</div>';
+    //     count.textContent = "0 teams";
+    //     return;
+    //   }
+
+    //   count.textContent = teams.length;
+    //   list.innerHTML = "";
+
+    //   teams.forEach(t => {
+    //     const row = document.createElement("div");
+    //     row.className = "team-row";
+
+    //     // Left side
+    //     const left = document.createElement("div");
+    //     const name = document.createElement("div");
+    //     name.className = "team-name";
+    //     name.textContent = t.teamName;
+        
+    //     const meta = document.createElement("div");
+    //     meta.className = "owner-name";
+    //     meta.innerHTML = `
+    //       ${t.ownerName}
+    //       <span style="font-size:0.65rem; color: #9ca3af; margin-left: 4px;">
+    //         • Match: ${t.match}
+    //       </span>
+    //     `;
+        
+    //     const players = document.createElement("div");
+    //     players.className = "player-chips";
+    //     (t.players || []).slice(0, 4).forEach(p => {
+    //       const chip = document.createElement("span");
+    //       chip.className = "chip";
+    //       chip.textContent = p;
+    //       players.appendChild(chip);
+    //     });
+    //     if (t.players.length > 4) {
+    //       const more = document.createElement("span");
+    //       more.className = "chip";
+    //       more.textContent = `+${t.players.length - 4}`;
+    //       players.appendChild(more);
+    //     }
+
+    //     left.append(name, meta, players);
+
+    //     // Right side: Points + buttons
+    //     const right = document.createElement("div");
+    //     right.style.textAlign = "right";
+    //     right.style.minWidth = "120px";
+
+    //     const pointsPill = document.createElement("div");
+    //     pointsPill.className = "points-pill";
+    //     pointsPill.textContent = t.points + " pts";
+
+    //     const input = document.createElement("input");
+    //     input.type = "number";
+    //     input.placeholder = "+/- pts";
+    //     input.style.width = "45px";
+    //     input.style.marginTop = "4px";
+    //     input.style.textAlign = "center";
+
+    //     const updateBtn = document.createElement("button");
+    //     updateBtn.textContent = "Update";
+    //     updateBtn.style.fontSize = "0.65rem";
+    //     updateBtn.style.padding = "2px 6px";
+    //     updateBtn.style.marginLeft = "2px";
+
+    //     const autoScoreBtn = document.createElement("button");
+    //     autoScoreBtn.textContent = "Auto";
+    //     autoScoreBtn.style.fontSize = "0.65rem";
+    //     autoScoreBtn.style.padding = "2px 6px";
+    //     autoScoreBtn.style.background = "linear-gradient(135deg, #8b5cf6, #a855f7)";
+    //     autoScoreBtn.style.color = "white";
+    //     autoScoreBtn.style.border = "none";
+    //     autoScoreBtn.style.borderRadius = "999px";
+
+    //     // Update button handler
+    //     updateBtn.addEventListener("click", async () => {
+    //       const delta = Number(input.value || 0);
+    //       if (isNaN(delta) || delta === 0) return alert("Enter points change");
+          
+    //       const res = await fetch(`${API_BASE}/api/teams/${t.id}/points`, {
+    //         method: "PATCH",
+    //         headers: { "Content-Type": "application/json" },
+    //         body: JSON.stringify({ delta })
+    //       });
+          
+    //       if (res.ok) {
+    //         const data = await res.json();
+    //         const idx = teams.findIndex(x => x.id === data.id);
+    //         teams[idx] = data;
+    //         renderTeams();
+    //       }
+    //     });
+
+    //     //Auto-score button handler
+    //     autoScoreBtn.addEventListener("click", async () => {
+    //       autoScoreBtn.disabled = true;
+    //       autoScoreBtn.textContent = "⏳";
+          
+    //       const res = await fetch(`${API_BASE}/api/teams/${t.id}/calculate-points`, { method: "POST" });
+          
+    //       if (res.ok) {
+    //         const data = await res.json();
+    //         const idx = teams.findIndex(x => x.id === data.team.id);
+    //         teams[idx] = data.team;
+    //         renderTeams();
+    //       } else {
+    //         alert("Auto-scoring failed");
+    //       }
+          
+    //       autoScoreBtn.disabled = false;
+    //       autoScoreBtn.textContent = "Auto";
+    //     });
+
+    //     right.append(pointsPill, input, updateBtn, autoScoreBtn);
+    //     row.append(left, right);
+    //     list.appendChild(row);
+    //   });
+    // }
 
     // Render leaderboard (with match)
     function renderLeaderboard() {
@@ -381,780 +447,7 @@
   </script>
 </body>
 </html>
--->
 
 
 
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <title>IPL 2026 Fantasy League</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <style>
-    :root {
-      --primary: #0f766e;
-      --primary-dark: #115e59;
-      --accent: #f97316;
-      --bg: #0b1120;
-      --card: #020617;
-      --border: #1e293b;
-      --text: #e5e7eb;
-      --muted: #9ca3af;
-    }
 
-    * {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-    }
-
-    body {
-      font-family: system-ui, sans-serif;
-      background: radial-gradient(circle at top, #0f172a, #020617 60%);
-      color: var(--text);
-      min-height: 100vh;
-      padding: 12px;
-    }
-
-    .app-shell {
-      max-width: 480px;
-      margin: 0 auto 32px;
-    }
-
-    header {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      margin-bottom: 16px;
-    }
-
-    header h1 {
-      font-size: 1.25rem;
-      line-height: 1.2;
-    }
-
-    header span {
-      font-size: 0.7rem;
-      color: var(--muted);
-      text-transform: uppercase;
-      letter-spacing: 0.08em;
-    }
-
-    .pill {
-      font-size: 0.7rem;
-      border-radius: 999px;
-      padding: 4px 10px;
-      border: 1px solid rgba(148,163,184,0.5);
-      color: var(--muted);
-    }
-
-    nav.tabs {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 6px;
-      margin-bottom: 12px;
-    }
-
-    nav button {
-      border-radius: 999px;
-      border: 1px solid transparent;
-      padding: 8px;
-      font-size: 0.8rem;
-      background: rgba(15,23,42,0.9);
-      color: var(--muted);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 6px;
-    }
-
-    nav button.active {
-      border-color: rgba(45,212,191,0.35);
-      background: linear-gradient(135deg, #0f766e, #22c55e);
-      color: #ecfeff;
-      box-shadow: 0 8px 22px rgba(34,197,94,0.45);
-    }
-
-    main {
-      display: flex;
-      flex-direction: column;
-      gap: 12px;
-    }
-
-    .card {
-      border-radius: 18px;
-      background: radial-gradient(circle at top left, #020617, #020617);
-      border: 1px solid rgba(51,65,85,0.9);
-      padding: 12px;
-    }
-
-    .card-title {
-      font-size: 0.9rem;
-      font-weight: 600;
-    }
-
-    .card-subtitle {
-      font-size: 0.7rem;
-      color: var(--muted);
-    }
-
-    .badge {
-      font-size: 0.65rem;
-      padding: 3px 8px;
-      border-radius: 999px;
-      background: rgba(15,23,42,0.9);
-      border: 1px solid rgba(148,163,184,0.4);
-      color: var(--muted);
-    }
-
-    .field-group {
-      display: flex;
-      flex-direction: column;
-      gap: 6px;
-      margin-top: 8px;
-    }
-
-    label {
-      font-size: 0.75rem;
-      color: var(--muted);
-    }
-
-    input, select {
-      width: 100%;
-      padding: 8px 9px;
-      border-radius: 10px;
-      border: 1px solid rgba(51,65,85,0.9);
-      background: rgba(15,23,42,0.9);
-      color: var(--text);
-      font-size: 0.8rem;
-      outline: none;
-    }
-
-    input:focus, select:focus {
-      border-color: var(--primary);
-      box-shadow: 0 0 0 1px rgba(45,212,194,0.25);
-    }
-
-    .btn-primary {
-      width: 100%;
-      margin-top: 10px;
-      border-radius: 999px;
-      border: none;
-      padding: 9px 12px;
-      font-size: 0.85rem;
-      font-weight: 600;
-      background: linear-gradient(135deg, #22c55e, #0ea5e9);
-      color: #020617;
-      box-shadow: 0 10px 25px rgba(34,197,94,0.45);
-    }
-
-    .small {
-      font-size: 0.7rem;
-      color: var(--muted);
-      margin-top: 6px;
-    }
-
-    .team-row {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 6px 0;
-      font-size: 0.8rem;
-    }
-
-    .team-row:not(:first-child) {
-      border-top: 1px dashed rgba(30,41,59,0.9);
-    }
-
-    .team-name {
-      font-weight: 500;
-    }
-
-    .owner-name {
-      font-size: 0.7rem;
-      color: var(--muted);
-    }
-
-    .points-pill {
-      font-size: 0.7rem;
-      padding: 3px 8px;
-      border-radius: 999px;
-      background: rgba(15,23,42,0.9);
-      border: 1px solid rgba(74,222,128,0.55);
-      color: #bbf7d0;
-    }
-
-    .player-chips {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 6px;
-      margin-top: 6px;
-    }
-
-    .chip {
-      font-size: 0.7rem;
-      padding: 4px 6px;
-      border-radius: 999px;
-      background: rgba(15,23,42,0.9);
-      border: 1px solid rgba(148,163,184,0.45);
-      color: var(--muted);
-    }
-
-    .status {
-      font-size: 0.65rem;
-      color: #4ade80;
-      margin-top: 4px;
-    }
-
-    .api-status {
-      font-size: 0.65rem;
-      padding: 2px 6px;
-      border-radius: 4px;
-      background: rgba(34,197,94,0.2);
-      color: #4ade80;
-      margin-top: 6px;
-    }
-
-    .api-error {
-      background: rgba(239,68,68,0.2);
-      color: #fca5a5;
-    }
-
-    button:disabled {
-      opacity: 0.5;
-      cursor: not-allowed;
-    }
-
-    @media (min-width: 600px) {
-      body { padding: 16px; }
-      header h1 { font-size: 1.4rem; }
-    }
-  </style>
-</head>
-<body>
-  <div class="app-shell">
-    <header>
-      <div>
-        <span>IPL 2026 FANTASY</span>
-        <h1>Live League</h1>
-      </div>
-      <div class="pill" id="apiStatus">Connecting...</div>
-    </header>
-
-    <nav class="tabs">
-      <button class="active" data-tab="create">Create</button>
-      <button data-tab="teams">Teams</button>
-      <button data-tab="leaderboard">Leaderboard</button>
-    </nav>
-
-    <main>
-      <!-- CREATE TEAM -->
-      <section class="card" id="tab-create">
-        <div class="card-header">
-          <div>
-            <div class="card-title">Create Fantasy XI</div>
-            <div class="card-subtitle">Live IPL matches • auto-scoring</div>
-          </div>
-          <span class="badge">Credits: 100/100</span>
-        </div>
-        
-        <div class="field-group">
-          <div class="inline-fields">
-            <div>
-              <label>Manager</label>
-              <input id="ownerName" placeholder="Jay Mehta">
-            </div>
-            <div>
-              <label>Team name</label>
-              <input id="teamName" placeholder="Mumbai Mavericks">
-            </div>
-          </div>
-          
-          <div>
-            <label for="matchSelect">Live IPL Matches</label>
-            <select id="matchSelect">
-              <option>Loading...</option>
-            </select>
-          </div>
-
-          <div class="field-group">
-            <label>Players (comma separated)</label>
-            <input id="playersInput" placeholder="Rohit Sharma (C), Suryakumar Yadav, Bumrah (VC)">
-            <small class="small">Add (C) for captain, (VC) for vice-captain</small>
-          </div>
-
-          <button class="btn-primary" id="saveTeamBtn">Save Team</button>
-        </div>
-      </section>
-
-      <!-- MY TEAMS (DISPLAY ONLY) -->
-      <section class="card" id="tab-teams" style="display:none">
-        <div class="cardHere's the **updated `index.html`** with **no manual scoring buttons**. Clean display-only UI showing teams + auto-calculated points (from server auto-scoring).[file:6][file:7]
-
-## Updated index.html (Clean Display-Only)
-
-```html
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <title>IPL 2026 Fantasy League</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <style>
-    :root {
-      --primary: #0f766e;
-      --primary-dark: #115e59;
-      --accent: #f97316;
-      --bg: #0b1120;
-      --card: #020617;
-      --border: #1e293b;
-      --text: #e5e7eb;
-      --muted: #9ca3af;
-    }
-
-    * { box-sizing: border-box; margin: 0; padding: 0; }
-    body { 
-      background: radial-gradient(circle at top, #0f172a, #020617 60%);
-      color: var(--text); 
-      font-family: system-ui, sans-serif;
-      min-height: 100vh; 
-      padding: 12px;
-    }
-
-    .app-shell { max-width: 480px; margin: 0 auto 32px auto; }
-
-    header { 
-      display: flex; 
-      align-items: center; 
-      justify-content: space-between; 
-      margin-bottom: 16px; 
-    }
-
-    header h1 { font-size: 1.25rem; line-height: 1.2; }
-    header span { 
-      font-size: 0.7rem; 
-      color: var(--muted); 
-      text-transform: uppercase; 
-      letter-spacing: 0.08em; 
-    }
-
-    .pill { 
-      font-size: 0.7rem; 
-      border-radius: 999px; 
-      padding: 4px 10px; 
-      border: 1px solid rgba(148,163,184,0.5); 
-      color: var(--muted); 
-    }
-
-    nav.tabs { 
-      display: grid; 
-      grid-template-columns: repeat(3, 1fr); 
-      gap: 6px; 
-      margin-bottom: 12px; 
-    }
-
-    nav button { 
-      border-radius: 999px; 
-      border: 1px solid transparent; 
-      padding: 8px; 
-      font-size: 0.8rem; 
-      background: rgba(15,23,42,0.9); 
-      color: var(--muted); 
-      display: flex; 
-      align-items: center; 
-      justify-content: center; 
-      gap: 6px; 
-    }
-
-    nav button.active { 
-      border-color: rgba(45,212,191,0.35); 
-      background: linear-gradient(135deg, #0f766e, #22c55e); 
-      color: #ecfeff; 
-      box-shadow: 0 8px 22px rgba(34,197,94,0.45); 
-    }
-
-    main { display: flex; flex-direction: column; gap: 12px; }
-
-    .card { 
-      border-radius: 18px; 
-      background: radial-gradient(circle at top left, #020617, #020617); 
-      border: 1px solid rgba(51,65,85,0.9); 
-      padding: 12px; 
-    }
-
-    .card-title { font-size: 0.9rem; font-weight: 600; }
-    .card-subtitle { font-size: 0.7rem; color: var(--muted); }
-
-    .badge { 
-      font-size: 0.65rem; 
-      padding: 3px 8px; 
-      border-radius: 999px; 
-      background: rgba(15,23,42,0.9); 
-      border: 1px solid rgba(148,163,184,0.4); 
-      color: var(--muted); 
-    }
-
-    .field-group { display: flex; flex-direction: column; gap: 6px; margin-top: 8px; }
-    label { font-size: 0.75rem; color: var(--muted); }
-    input, select { 
-      width: 100%; 
-      padding: 8px 9px; 
-      border-radius: 10px; 
-      border: 1px solid rgba(51,65,85,0.9); 
-      background: rgba(15,23,42,0.9); 
-      color: var(--text); 
-      font-size: 0.8rem; 
-    }
-
-    input:focus, select:focus { 
-      border-color: var(--primary); 
-      box-shadow: 0 0 0 1px rgba(45,212,194,0.25); 
-    }
-
-    .btn-primary { 
-      width: 100%; 
-      margin-top: 10px; 
-      border-radius: 999px; 
-      border: none; 
-      padding: 9px 12px; 
-      font-size: 0.85rem; 
-      font-weight: 600; 
-      background: linear-gradient(135deg, #22c55e, #0ea5e9); 
-      color: #020617; 
-      box-shadow: 0 10px 25px rgba(34,197,94,0.45); 
-    }
-
-    .small { font-size: 0.7rem; color: var(--muted); margin-top: 6px; }
-
-    /* 🆕 CLEAN DISPLAY-ONLY */
-    .team-row { 
-      display: flex; 
-      align-items: center; 
-      justify-content: space-between; 
-      padding: 12px 0; 
-      font-size: 0.8rem; 
-      border-top: 1px dashed rgba(30,41,59,0.5); 
-    }
-
-    .team-row:first-child { border-top: none; padding-top: 0; }
-
-    .team-name { font-weight: 500; font-size: 0.9rem; margin-bottom: 4px; }
-    .owner-name { 
-      font-size: 0.7rem; 
-      color: var(--muted); 
-      display: flex; 
-      align-items: center; 
-      gap: 8px; 
-    }
-
-    .points-display { 
-      font-size: 1rem; 
-      font-weight: 700; 
-      padding: 8px 16px; 
-      border-radius: 999px; 
-      background: linear-gradient(135deg, #22c55e, #4ade80); 
-      color: #020617; 
-      min-width: 80px; 
-      text-align: center; 
-      box-shadow: 0 4px 12px rgba(34,197,94,0.3); 
-    }
-
-    .player-chips { 
-      display: flex; 
-      flex-wrap: wrap; 
-      gap: 4px; 
-      margin-top: 8px; 
-    }
-
-    .chip { 
-      font-size: 0.65rem; 
-      padding: 3px 6px; 
-      border-radius: 12px; 
-      background: rgba(15,23,42,0.8); 
-      border: 1px solid rgba(148,163,184,0.3); 
-      color: var(--text); 
-    }
-
-    .status { 
-      font-size: 0.65rem; 
-      color: #4ade80; 
-      margin-top: 4px; 
-    }
-
-    .api-status { 
-      font-size: 0.65rem; 
-      padding: 2px 6px; 
-      border-radius: 4px; 
-      background: rgba(34,197,94,0.2); 
-      color: #4ade80; 
-      margin-top: 6px; 
-    }
-
-    @media (min-width: 600px) {
-      body { padding: 16px; }
-      header h1 { font-size: 1.4rem; }
-    }
-  </style>
-</head>
-<body>
-  <div class="app-shell">
-    <header>
-      <div>
-        <span>IPL 2026 FANTASY</span>
-        <h1>Live League</h1>
-      </div>
-      <div class="pill" id="apiStatus">Connecting...</div>
-    </header>
-
-    <nav class="tabs">
-      <button class="active" data-tab="create">Create</button>
-      <button data-tab="teams">Teams</button>
-      <button data-tab="leaderboard">Leaderboard</button>
-    </nav>
-
-    <main>
-      <!-- CREATE TEAM -->
-      <section class="card" id="tab-create">
-        <div class="card-header">
-          <div>
-            <div class="card-title">Create Fantasy XI</div>
-            <div class="card-subtitle">Live IPL matches -  Auto-scoring</div>
-          </div>
-          <span class="badge">11/11</span>
-        </div>
-        
-        <div class="field-group">
-          <div class="inline-fields">
-            <div>
-              <label>Manager</label>
-              <input id="ownerName" placeholder="Jay Mehta" value="Jay Mehta">
-            </div>
-            <div>
-              <label>Team name</label>
-              <input id="teamName" placeholder="Mumbai Mavericks">
-            </div>
-          </div>
-          
-          <div>
-            <label for="matchSelect">Match</label>
-            <select id="matchSelect">
-              <option>Loading...</option>
-            </select>
-          </div>
-
-          <div class="field-group">
-            <label>Players (comma separated)</label>
-            <input id="playersInput" placeholder="Rohit Sharma (C), Suryakumar Yadav, Bumrah (VC)">
-            <small class="small">Add (C) for captain, (VC) for vice-captain</small>
-          </div>
-
-          <button class="btn-primary" id="saveTeamBtn">Create Team</button>
-        </div>
-      </section>
-
-      <!-- MY TEAMS (🆕 DISPLAY-ONLY) -->
-      <section class="card" id="tab-teams" style="display: none;">
-        <div class="card-header">
-          <div>
-            <div class="card-title">My Teams</div>
-            <div class="card-subtitle">Auto-scored with real match stats</div>
-          </div>
-          <span class="badge" id="teams-count">0</span>
-        </div>
-        <div id="teamList">
-          <div class="small">Create your first fantasy XI!</div>
-        </div>
-      </section>
-
-      <!-- LEADERBOARD (🆕 DISPLAY-ONLY) -->
-      <section class="card" id="tab-leaderboard" style="display: none;">
-        <div class="card-header">
-          <div>
-            <div class="card-title">Live Leaderboard</div>
-            <div class="card-subtitle">Top fantasy teams</div>
-          </div>
-          <span class="badge">Live</span>
-        </div>
-        <div id="leaderboardList">
-          <div class="small">Create teams to see rankings</div>
-        </div>
-      </section>
-    </main>
-  </div>
-
-  <script>
-    let teams = [];
-    const API_BASE = '/'; // Root-relative for Vercel
-
-    // Tab switching
-    document.querySelectorAll('nav button').forEach(btn => {
-      btn.addEventListener('click', () => {
-        document.querySelectorAll('nav button').forEach(b => b.classList.remove('active'));
-        btn.classList.add('active');
-        
-        const tab = btn.getAttribute('data-tab');
-        document.querySelectorAll('main section').forEach(s => s.style.display = 'none');
-        document.getElementById(`tab-${tab}`).style.display = 'block';
-        
-        if (tab === 'teams') renderTeams();
-        if (tab === 'leaderboard') renderLeaderboard();
-      });
-    });
-
-    // API Status
-    async function checkAPI() {
-      try {
-        const res = await fetch(`${API_BASE}status`);
-        if (!res.ok) throw new Error(`HTTP ${res.status}`);
-        
-        const data = await res.json();
-        console.log('API check:', data);
-        
-        const text = `${data.autoScoring} • ${data.cricapi}`;
-        const isOk = data.status === 'ok';
-        
-        document.getElementById('apiStatus').textContent = text;
-        document.getElementById('apiStatus').className = 
-          isOk ? 'pill api-status' : 'pill api-status api-error';
-      } catch (err) {
-        console.error('API check failed:', err);
-        document.getElementById('apiStatus').textContent = 'Backend offline';
-        document.getElementById('apiStatus').className = 'pill api-status api-error';
-      }
-    }
-
-    // Load IPL matches
-    async function loadLiveMatches() {
-      try {
-        const res = await fetch(`${API_BASE}api/matches`);
-        const matches = await res.json();
-        
-        const select = document.getElementById('matchSelect');
-        select.innerHTML = '<option value="">Select IPL match</option>';
-        
-        matches.slice(0, 15).forEach(match => {
-          const option = document.createElement('option');
-          option.value = match.id;
-          option.textContent = match.name || match.series?.name || 'IPL Match';
-          select.appendChild(option);
-        });
-      } catch (err) {
-        document.getElementById('matchSelect').innerHTML = 
-          '<option>Practice Match</option><option>Demo IPL Final</option>';
-      }
-    }
-
-    // Load teams
-    async function loadTeams() {
-      try {
-        const res = await fetch(`${API_BASE}api/teams`);
-        teams = await res.json();
-        renderTeams();
-        renderLeaderboard();
-      } catch (err) {
-        console.error('Load teams failed:', err);
-      }
-    }
-
-    // 🆕 CLEAN: Display-only teams list
-    function renderTeams() {
-      const list = document.getElementById('teamList');
-      const count = document.getElementById('teams-count');
-      
-      if (!teams.length) {
-        list.innerHTML = '<div class="small">Create your first fantasy XI!</div>';
-        count.textContent = '0';
-        return;
-      }
-      
-      count.textContent = teams.length;
-      
-      list.innerHTML = teams.map(team => `
-        <div class="team-row">
-          <div>
-            <div class="team-name">${team.teamName}</div>
-            <div class="owner-name">
-              ${team.ownerName}
-              <span style="font-size: 0.65rem; color: #9ca3af;">• ${team.match}</span>
-            </div>
-            <div class="player-chips">
-              ${team.players.slice(0, 6).map(p => `<span class="chip">${p}</span>`).join('')}
-              ${team.players.length > 6 ? `<span class="chip">+${team.players.length-6}</span>` : ''}
-            </div>
-            ${team.lastScoredAt ? `<div class="status">✓ Auto-scored</div>` : ''}
-          </div>
-          <div class="points-display">${team.points} pts</div>
-        </div>
-      `).join('');
-    }
-
-    // 🆕 CLEAN: Leaderboard only
-    function renderLeaderboard() {
-      const list = document.getElementById('leaderboardList');
-      const sorted = [...teams].sort((a, b) => b.points - a.points);
-      
-      if (!sorted.length) {
-        list.innerHTML = '<div class="small">Create teams to see rankings</div>';
-        return;
-      }
-      
-      list.innerHTML = sorted.slice(0, 10).map((team, idx) => `
-        <div class="team-row">
-          <span class="points-display" style="min-width: 32px;">${idx + 1}.</span>
-          <div>
-            <div class="team-name">${team.teamName}</div>
-            <div class="owner-name">
-              ${team.ownerName} • ${team.match}
-            </div>
-          </div>
-          <div class="points-display">${team.points} pts</div>
-        </div>
-      `).join('');
-    }
-
-    // Create team
-    document.getElementById('saveTeamBtn').addEventListener('click', async () => {
-      const ownerName = document.getElementById('ownerName').value.trim() || 'Anonymous';
-      const teamName = document.getElementById('teamName').value.trim() || 'My XI';
-      const match = document.getElementById('matchSelect').value || 'Practice Match';
-      const playersRaw = document.getElementById('playersInput').value.trim();
-      
-      if (!playersRaw) return alert('Add players!');
-      
-      const players = playersRaw.split(',')
-        .map(p => p.trim())
-        .filter(Boolean)
-        .slice(0, 11);
-      
-      if (players.length < 11) return alert('Need 11 players');
-      
-      try {
-        const res = await fetch(`${API_BASE}api/teams`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ ownerName, teamName, match, players })
-        });
-        
-        if (res.ok) {
-          document.getElementById('playersInput').value = '';
-          alert('✅ Team created! Check My Teams tab');
-          await loadTeams();
-        } else {
-          const err = await res.json();
-          alert(`Error: ${err.error || 'Server error'}`);
-        }
-      } catch (err) {
-        alert('Network error - try again');
-      }
-    });
-
-    // Initialize
-    checkAPI();
-    loadLiveMatches();
-    loadTeams();
-    //setInterval(checkAPI, 30000); // Refresh status every 30s
-    checkAPI();
-  </script>
-</body>
-</html>
