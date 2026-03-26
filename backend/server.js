@@ -1,329 +1,249 @@
-// server.js - Complete IPL 2026 Fantasy League Backend
-// --- MONGODB SETUP (replace teams.json) ---
-const { MongoClient } = require("mongodb");
-
-//let dbReady = false;
-
-// Get MongoDB URI from environment
-// const uri = process.env.MONGODB_URI;
-// console.log("check url ",uri);
-// const client = new MongoClient(uri);
-
-let db, teamsCollection;
-let teams = [];
-
-async function connectDb() {
-  console.log("✅ MongoDB connect call");
-  await client.connect();
-  db = client.db("iplfantasy2026");
-  teamsCollection = db.collection("teams");
-  console.log("✅ MongoDB connected");
-  initializeData();
-}
-
-async function loadTeamsFromDb() {
-  const cursor = teamsCollection.find({});
-  teams = await cursor.toArray();
-  console.log("Success",teams);
-}
-
-async function saveTeamToDb(team) {
-  if (!teamsCollection) {
-    console.error("MongoDB teamsCollection is not ready yet");
-    throw new Error("Database not connected");
-  }
-  await teamsCollection.updateOne(
-    { id: team.id },
-    { $set: team },
-    { upsert: true }
-  );
-}
-
-async function deleteTeamFromDb(id) {
-
-if (!teamsCollection) {
-    console.error("MongoDB teamsCollection is not ready yet");
-    throw new Error("Database not connected");
-  }
-  await teamsCollection.deleteOne({ id });
-
-}
-
-// Call this once when the server starts
-// connectDb().catch(console.error);
-
-
-// Replace your old loadTeams / saveTeams:
-async function initializeData() {
-  await loadTeamsFromDb();
-  console.log(`📊 Loaded ${teams.length} teams from MongoDB`);
-}
-
-async function saveTeams() {
-  // optional: bulk insert / update if you prefer
-  for (const t of teams) {
-    await saveTeamToDb(t);
-  }
-}
-// --- MONGODB SETUP END ---
+// // server.js - Complete IPL 2026 Fantasy League Backend
+// // --- MONGODB SETUP (replace teams.json) ---
+// const { MongoClient } = require("mongodb");
 
 
 
+// let db, teamsCollection;
+// let teams = [];
 
-const express = require("express");
-const cors = require("cors");
-const fs = require("fs/promises");
-const path = require("path");
-const axios = require("axios");
+// async function connectDb() {
+//   console.log("✅ MongoDB connect call");
+//   await client.connect();
+//   db = client.db("iplfantasy2026");
+//   teamsCollection = db.collection("teams");
+//   console.log("✅ MongoDB connected");
+//   initializeData();
+// }
 
-const app = express();
-const PORT = process.env.PORT || 4000;
-const DATA_FILE = path.join(__dirname, "teams.json");
+// async function loadTeamsFromDb() {
+//   const cursor = teamsCollection.find({});
+//   teams = await cursor.toArray();
+//   console.log("Success",teams);
+// }
 
-// ⚠️ REPLACE WITH YOUR CricAPI KEY (free at cricapi.com)
-const CRICAPI_KEY = process.env.CRICAPI_KEY || "e18c70fc-6fe7-4a3c-94c4-f4241f69ab1f";
-
-// Middleware
-app.use(cors());
-app.use(express.json());
-
-// app.use(async (req, res, next) => {
-//   if (!dbReady) {
-//     // If you see this in Vercel logs, DB is still initializing
-//     console.log("Database not ready yet, waiting...");
-//     return res.status(503).json({ 
-//       error: "Database initializing, please retry"
-//     });
+// async function saveTeamToDb(team) {
+//   if (!teamsCollection) {
+//     console.error("MongoDB teamsCollection is not ready yet");
+//     throw new Error("Database not connected");
 //   }
-//   next();
-// });
+//   await teamsCollection.updateOne(
+//     { id: team.id },
+//     { $set: team },
+//     { upsert: true }
+//   );
+// }
 
-// File persistence
-// async function loadTeams() {
+// async function deleteTeamFromDb(id) {
+
+// if (!teamsCollection) {
+//     console.error("MongoDB teamsCollection is not ready yet");
+//     throw new Error("Database not connected");
+//   }
+//   await teamsCollection.deleteOne({ id });
+
+// }
+
+// // Call this once when the server starts
+// // connectDb().catch(console.error);
+
+
+// // Replace your old loadTeams / saveTeams:
+// async function initializeData() {
+//   await loadTeamsFromDb();
+//   console.log(`📊 Loaded ${teams.length} teams from MongoDB`);
+// }
+
+// async function saveTeams() {
+//   // optional: bulk insert / update if you prefer
+//   for (const t of teams) {
+//     await saveTeamToDb(t);
+//   }
+// }
+// // --- MONGODB SETUP END ---
+
+
+
+
+// const express = require("express");
+// const cors = require("cors");
+// const fs = require("fs/promises");
+// const path = require("path");
+// const axios = require("axios");
+
+// const app = express();
+// const PORT = process.env.PORT || 4000;
+// const DATA_FILE = path.join(__dirname, "teams.json");
+
+// // ⚠️ REPLACE WITH YOUR CricAPI KEY (free at cricapi.com)
+// const CRICAPI_KEY = process.env.CRICAPI_KEY || "e18c70fc-6fe7-4a3c-94c4-f4241f69ab1f";
+
+// // Middleware
+// app.use(cors());
+// app.use(express.json());
+
+
+
+// // CricAPI: Live/upcoming IPL matches
+// async function getIPLMatches() {
 //   try {
-//     const data = await fs.readFile(DATA_FILE, "utf8");
-//     return JSON.parse(data);
-//   } catch {
+//     const res = await axios.get("https://api.cricapi.com/v1/matches", {
+//       params: { apikey: CRICAPI_KEY, offset: 0, limit: 20 }
+//     });
+    
+//     return res.data.data?.filter(match => 
+//       match.series?.name?.includes("IPL") || 
+//       match.series?.name?.includes("Indian Premier League") ||
+//       match.name?.includes("IPL")
+//     ) || [];
+//   } catch (err) {
+//     console.error("CricAPI matches error:", err.message);
 //     return [];
 //   }
 // }
 
-// async function saveTeams(teams) {
-//   await fs.writeFile(DATA_FILE, JSON.stringify(teams, null, 2), "utf8");
+// // CricAPI: Live match details
+// async function getMatchScore(matchId) {
+//   try {
+//     const res = await axios.get(`https://api.cricapi.com/v1/match/${matchId}`, {
+//       params: { apikey: CRICAPI_KEY }
+//     });
+//     return res.data;
+//   } catch (err) {
+//     console.error("CricAPI match error:", err.message);
+//     return null;
+//   }
 // }
 
-//let teams = [];
-
-// async function initializeData() {
-//   teams = await loadTeams();
-//   console.log(`📊 Loaded ${teams.length} teams from ${DATA_FILE}`);
-// }
-
-// CricAPI: Live/upcoming IPL matches
-async function getIPLMatches() {
-  try {
-    const res = await axios.get("https://api.cricapi.com/v1/matches", {
-      params: { apikey: CRICAPI_KEY, offset: 0, limit: 20 }
-    });
-    
-    return res.data.data?.filter(match => 
-      match.series?.name?.includes("IPL") || 
-      match.series?.name?.includes("Indian Premier League") ||
-      match.name?.includes("IPL")
-    ) || [];
-  } catch (err) {
-    console.error("CricAPI matches error:", err.message);
-    return [];
-  }
-}
-
-// CricAPI: Live match details
-async function getMatchScore(matchId) {
-  try {
-    const res = await axios.get(`https://api.cricapi.com/v1/match/${matchId}`, {
-      params: { apikey: CRICAPI_KEY }
-    });
-    return res.data;
-  } catch (err) {
-    console.error("CricAPI match error:", err.message);
-    return null;
-  }
-}
-
-// 🆕 Get player stats (CricAPI + smart fallback)
-async function getPlayerStats(players, matchData) {
-  const stats = {};
+// // 🆕 Get player stats (CricAPI + smart fallback)
+// async function getPlayerStats(players, matchData) {
+//   const stats = {};
   
-  if (matchData?.players) {
-    players.forEach(playerName => {
-      // Smart name matching
-      const cleanName = playerName.toLowerCase().split('(')[0].trim();
-      const player = matchData.players.find(p => 
-        p.name?.toLowerCase().includes(cleanName) ||
-        cleanName.includes(p.name?.toLowerCase())
-      );
+//   if (matchData?.players) {
+//     players.forEach(playerName => {
+//       // Smart name matching
+//       const cleanName = playerName.toLowerCase().split('(')[0].trim();
+//       const player = matchData.players.find(p => 
+//         p.name?.toLowerCase().includes(cleanName) ||
+//         cleanName.includes(p.name?.toLowerCase())
+//       );
       
-      if (player) {
-        stats[playerName] = {
-          runs: player.runs || 0,
-          wickets: player.wickets || 0,
-          fours: player.fours || 0,
-          sixes: player.sixes || 0,
-          catches: player.catches || 0,
-          role: player.role || "BAT"
-        };
-      } else {
-        stats[playerName] = mockPlayerStats(playerName);
-      }
-    });
-  } else {
-    // Fallback: mock realistic stats
-    players.forEach(playerName => {
-      stats[playerName] = mockPlayerStats(playerName);
-    });
-  }
+//       if (player) {
+//         stats[playerName] = {
+//           runs: player.runs || 0,
+//           wickets: player.wickets || 0,
+//           fours: player.fours || 0,
+//           sixes: player.sixes || 0,
+//           catches: player.catches || 0,
+//           role: player.role || "BAT"
+//         };
+//       } else {
+//         stats[playerName] = mockPlayerStats(playerName);
+//       }
+//     });
+//   } else {
+//     // Fallback: mock realistic stats
+//     players.forEach(playerName => {
+//       stats[playerName] = mockPlayerStats(playerName);
+//     });
+//   }
   
-  return stats;
-}
+//   return stats;
+// }
 
-// Mock stats for demo/perfect fallback
-function mockPlayerStats(playerName) {
-  const name = playerName.toLowerCase();
-  const baseStats = {
-    runs: Math.floor(Math.random() * 60) + 5,
-    wickets: Math.floor(Math.random() * 3),
-    fours: Math.floor(Math.random() * 6),
-    sixes: Math.floor(Math.random() * 4),
-    catches: Math.floor(Math.random() * 2),
-    role: "ALL"
-  };
+// // Mock stats for demo/perfect fallback
+// function mockPlayerStats(playerName) {
+//   const name = playerName.toLowerCase();
+//   const baseStats = {
+//     runs: Math.floor(Math.random() * 60) + 5,
+//     wickets: Math.floor(Math.random() * 3),
+//     fours: Math.floor(Math.random() * 6),
+//     sixes: Math.floor(Math.random() * 4),
+//     catches: Math.floor(Math.random() * 2),
+//     role: "ALL"
+//   };
 
-  // Player-specific boosts
-  if (name.includes('rohit') || name.includes('kohli') || name.includes('gill')) {
-    baseStats.runs += 30;
-    baseStats.fours += 3;
-    baseStats.role = "BAT";
-  } else if (name.includes('bumrah') || name.includes('shami') || name.includes('siraj')) {
-    baseStats.wickets += 2;
-    baseStats.role = "BOWL";
-  } else if (name.includes('hardik') || name.includes('jaddu')) {
-    baseStats.role = "AR";
-  }
+//   // Player-specific boosts
+//   if (name.includes('rohit') || name.includes('kohli') || name.includes('gill')) {
+//     baseStats.runs += 30;
+//     baseStats.fours += 3;
+//     baseStats.role = "BAT";
+//   } else if (name.includes('bumrah') || name.includes('shami') || name.includes('siraj')) {
+//     baseStats.wickets += 2;
+//     baseStats.role = "BOWL";
+//   } else if (name.includes('hardik') || name.includes('jaddu')) {
+//     baseStats.role = "AR";
+//   }
 
-  return baseStats;
-}
+//   return baseStats;
+// }
 
-// 🆗 REAL FANTASY SCORING ENGINE (Standard IPL rules)
-function calculateFantasyPoints(players, playerStats) {
-  let totalPoints = 0;
+// // 🆗 REAL FANTASY SCORING ENGINE (Standard IPL rules)
+// function calculateFantasyPoints(players, playerStats) {
+//   let totalPoints = 0;
   
-  players.forEach(playerName => {
-    const stats = playerStats[playerName] || { runs: 0, wickets: 0, fours: 0, sixes: 0, catches: 0 };
-    let playerPoints = 0;
-    const isCaptain = playerName.toLowerCase().includes('(c)');
-    const isViceCaptain = playerName.toLowerCase().includes('(vc)');
+//   players.forEach(playerName => {
+//     const stats = playerStats[playerName] || { runs: 0, wickets: 0, fours: 0, sixes: 0, catches: 0 };
+//     let playerPoints = 0;
+//     const isCaptain = playerName.toLowerCase().includes('(c)');
+//     const isViceCaptain = playerName.toLowerCase().includes('(vc)');
 
-    // BATTING POINTS
-    playerPoints += stats.runs * 1;           // 1 per run
-    playerPoints += stats.fours * 1;          // 1 per boundary
-    playerPoints += stats.sixes * 2;          // 2 per six
-    if (stats.runs >= 30) playerPoints += 5;  // 30-run bonus
-    if (stats.runs >= 50) playerPoints += 10; // Half-century
-    if (stats.runs >= 100) playerPoints += 20;// Century
+//     // BATTING POINTS
+//     playerPoints += stats.runs * 1;           // 1 per run
+//     playerPoints += stats.fours * 1;          // 1 per boundary
+//     playerPoints += stats.sixes * 2;          // 2 per six
+//     if (stats.runs >= 30) playerPoints += 5;  // 30-run bonus
+//     if (stats.runs >= 50) playerPoints += 10; // Half-century
+//     if (stats.runs >= 100) playerPoints += 20;// Century
 
-    // BOWLING POINTS
-    playerPoints += stats.wickets * 25;       // 25 per wicket
-    if (stats.wickets >= 3) playerPoints += 5; // 3-wicket bonus
-    if (stats.wickets >= 4) playerPoints += 10;// 4-wicket bonus
+//     // BOWLING POINTS
+//     playerPoints += stats.wickets * 25;       // 25 per wicket
+//     if (stats.wickets >= 3) playerPoints += 5; // 3-wicket bonus
+//     if (stats.wickets >= 4) playerPoints += 10;// 4-wicket bonus
 
-    // FIELDING POINTS
-    playerPoints += stats.catches * 8;        // 8 per catch/stumping
-    if (stats.catches >= 3) playerPoints += 4;// 3 catches bonus
+//     // FIELDING POINTS
+//     playerPoints += stats.catches * 8;        // 8 per catch/stumping
+//     if (stats.catches >= 3) playerPoints += 4;// 3 catches bonus
 
-    // Captain (2x) / Vice-Captain (1.5x) multiplier
-    if (isCaptain) playerPoints *= 2;
-    else if (isViceCaptain) playerPoints *= 1.5;
+//     // Captain (2x) / Vice-Captain (1.5x) multiplier
+//     if (isCaptain) playerPoints *= 2;
+//     else if (isViceCaptain) playerPoints *= 1.5;
 
-    totalPoints += Math.floor(playerPoints);
-  });
+//     totalPoints += Math.floor(playerPoints);
+//   });
 
-  return totalPoints;
-}
+//   return totalPoints;
+// }
 
-// 🛠️ API ROUTES
+// // 🛠️ API ROUTES
 
-
-app.get("/", (req, res) => {
-  res.sendFile(path.join(__dirname, "index.html"));
-});
 
 // app.get("/", (req, res) => {
-//   console.log("GET /: serving plain HTML inline");
-//   res.setHeader("Content-Type", "text/html");
-//   res.end(`
-//     <!DOCTYPE html>
-//     <html>
-//       <head><title>IPL Fantasy</title></head>
-//       <body><h1>Live</h1></body>
-//     </html>
-//   `);
+//   res.sendFile(path.join(__dirname, "index.html"));
 // });
 
-// 2. Static assets (css, js, images, etc.)
-app.use(express.static(__dirname));
 
-app.get("/status", (req, res) => {
-  res.json({ 
-    status: "ok", 
-    service: "IPL 2026 Fantasy API v2.0",
-    teamsCount: teams.length,
-    cricapi: CRICAPI_KEY == "e18c70fc-6fe7-4a3c-94c4-f4241f69ab1f" ? "✅ Active" : "❌ Add your key",
-    dataFile: DATA_FILE
-  });
-});
 
-// 📋 Teams CRUD
-app.get("/api/teams", (req, res) => res.json(teams));
-// app.get("/api/teams", async (req, res) => {
-//   try {
-//     res.json(teams);
-//   } catch (err) {
-//     console.error("/api/teams error:", err);
-//     res.status(500).json({ error: "Internal error" });
-//   }
+// // 2. Static assets (css, js, images, etc.)
+// app.use(express.static(__dirname));
+
+// app.get("/status", (req, res) => {
+//   res.json({ 
+//     status: "ok", 
+//     service: "IPL 2026 Fantasy API v2.0",
+//     teamsCount: teams.length,
+//     cricapi: CRICAPI_KEY == "e18c70fc-6fe7-4a3c-94c4-f4241f69ab1f" ? "✅ Active" : "❌ Add your key",
+//     dataFile: DATA_FILE
+//   });
 // });
 
-app.post("/api/teams", async (req, res) => {
-  const { ownerName, teamName, match, players } = req.body;
-
-  if (!players?.length) {
-    return res.status(400).json({ error: "Players array required" });
-  }
-
-  const team = {
-    id: Date.now().toString(),
-    ownerName: ownerName?.trim() || "Anonymous",
-    teamName: teamName?.trim() || "Team XI",
-    match: match || "Practice Match",
-    players: players.map(p => String(p).trim()).filter(Boolean),
-    points: 0,
-    createdAt: new Date().toISOString(),
-    updatedAt: null,
-    playerStats: {},
-    lastScoredAt: null
-  };
-
-  await saveTeamToDb(team);
-  await loadTeamsFromDb(); // optional: fresh list
-
-  res.status(201).json(team);
-});
-
+// // 📋 Teams CRUD
+// app.get("/api/teams", (req, res) => res.json(teams));
 
 
 // app.post("/api/teams", async (req, res) => {
 //   const { ownerName, teamName, match, players } = req.body;
-  
+
 //   if (!players?.length) {
 //     return res.status(400).json({ error: "Players array required" });
 //   }
@@ -335,13 +255,22 @@ app.post("/api/teams", async (req, res) => {
 //     match: match || "Practice Match",
 //     players: players.map(p => String(p).trim()).filter(Boolean),
 //     points: 0,
-//     createdAt: new Date().toISOString()
+//     createdAt: new Date().toISOString(),
+//     updatedAt: null,
+//     playerStats: {},
+//     lastScoredAt: null
 //   };
 
-//   teams.push(team);
-//   await saveTeams(teams);
+//   await saveTeamToDb(team);
+//   await loadTeamsFromDb(); // optional: fresh list
+
 //   res.status(201).json(team);
 // });
+
+
+
+
+
 
 // app.patch("/api/teams/:id/points", async (req, res) => {
 //   const { id } = req.params;
@@ -357,145 +286,65 @@ app.post("/api/teams", async (req, res) => {
 
 //   team.points += change;
 //   team.updatedAt = new Date().toISOString();
-//   await saveTeams(teams);
+
+//   await saveTeamToDb(team);
+//   await loadTeamsFromDb(); // update global list
+
 //   res.json(team);
 // });
 
-app.patch("/api/teams/:id/points", async (req, res) => {
-  const { id } = req.params;
-  const { delta } = req.body;
-
-  const team = teams.find(t => t.id === id);
-  if (!team) return res.status(404).json({ error: "Team not found" });
-
-  const change = Number(delta);
-  if (isNaN(change) || change === 0) {
-    return res.status(400).json({ error: "Valid delta required" });
-  }
-
-  team.points += change;
-  team.updatedAt = new Date().toISOString();
-
-  await saveTeamToDb(team);
-  await loadTeamsFromDb(); // update global list
-
-  res.json(team);
-});
 
 
-
-app.get("/api/teams/:id", (req, res) => {
-  const team = teams.find(t => t.id === req.params.id);
-  if (!team) return res.status(404).json({ error: "Team not found" });
-  res.json(team);
-});
-
-
-app.delete("/api/teams/:id", async (req, res) => {
-  const idx = teams.findIndex(t => t.id === req.params.id);
-  if (idx === -1) return res.status(404).json({ error: "Team not found" });
-
-  teams.splice(idx, 1);
-  await deleteTeamFromDb(req.params.id);
-  await loadTeamsFromDb();
-
-  res.json({ message: "Team deleted" });
-});
-
-
+// app.get("/api/teams/:id", (req, res) => {
+//   const team = teams.find(t => t.id === req.params.id);
+//   if (!team) return res.status(404).json({ error: "Team not found" });
+//   res.json(team);
+// });
 
 
 // app.delete("/api/teams/:id", async (req, res) => {
 //   const idx = teams.findIndex(t => t.id === req.params.id);
 //   if (idx === -1) return res.status(404).json({ error: "Team not found" });
-  
+
 //   teams.splice(idx, 1);
-//   await saveTeams(teams);
+//   await deleteTeamFromDb(req.params.id);
+//   await loadTeamsFromDb();
+
 //   res.json({ message: "Team deleted" });
 // });
 
-// 🏏 CRICAPI + LIVE SCORING
-app.get("/api/matches", async (req, res) => {
-  const matches = await getIPLMatches();
-  res.json(matches);
-});
-
-app.get("/api/matches/:matchId", async (req, res) => {
-  const score = await getMatchScore(req.params.matchId);
-  if (!score) return res.status(404).json({ error: "Match not found" });
-  res.json(score);
-});
-
-// 🎯 AUTO FANTASY SCORING (The Magic!)
-app.post("/api/teams/:id/calculate-points", async (req, res) => {
-  const { id } = req.params;
-  const team = teams.find(t => t.id === id);
-  if (!team) return res.status(404).json({ error: "Team not found" });
-
-  try {
-    const matchData = await getMatchScore(team.match);
-    const playerStats = await getPlayerStats(team.players, matchData);
-    const totalPoints = calculateFantasyPoints(team.players, playerStats);
-    const delta = totalPoints - team.points;
-
-    team.points = totalPoints;
-    team.playerStats = playerStats;
-    team.lastScoredAt = new Date().toISOString();
-
-    await saveTeamToDb(team);
-    await loadTeamsFromDb();
-
-    res.json({
-      team,
-      delta,
-      totalPoints,
-      playerStats,
-      message: `Auto-scored ${totalPoints} points! (${delta >= 0 ? '+' : ''}${delta})`
-    });
-  } catch (err) {
-    console.error("Auto-score error:", err);
-
-    const fallbackPoints = Math.floor(Math.random() * 250) + 75;
-    const delta = fallbackPoints - team.points;
-
-    team.points = fallbackPoints;
-    team.lastScoredAt = new Date().toISOString();
-
-    await saveTeamToDb(team);
-    await loadTeamsFromDb();
-
-    res.json({
-      team,
-      delta,
-      totalPoints: fallbackPoints,
-      message: `Fallback: ${fallbackPoints} pts (CricAPI unavailable)`
-    });
-  }
-});
 
 
+// // 🏏 CRICAPI + LIVE SCORING
+// app.get("/api/matches", async (req, res) => {
+//   const matches = await getIPLMatches();
+//   res.json(matches);
+// });
 
+// app.get("/api/matches/:matchId", async (req, res) => {
+//   const score = await getMatchScore(req.params.matchId);
+//   if (!score) return res.status(404).json({ error: "Match not found" });
+//   res.json(score);
+// });
 
-
+// // 🎯 AUTO FANTASY SCORING (The Magic!)
 // app.post("/api/teams/:id/calculate-points", async (req, res) => {
 //   const { id } = req.params;
 //   const team = teams.find(t => t.id === id);
 //   if (!team) return res.status(404).json({ error: "Team not found" });
 
 //   try {
-//     // Get live match data
 //     const matchData = await getMatchScore(team.match);
-    
-//     // Calculate real fantasy points
 //     const playerStats = await getPlayerStats(team.players, matchData);
 //     const totalPoints = calculateFantasyPoints(team.players, playerStats);
 //     const delta = totalPoints - team.points;
 
-//     // Update team
 //     team.points = totalPoints;
-//     team.playerStats = playerStats; // For frontend display
+//     team.playerStats = playerStats;
 //     team.lastScoredAt = new Date().toISOString();
-//     await saveTeams(teams);
+
+//     await saveTeamToDb(team);
+//     await loadTeamsFromDb();
 
 //     res.json({
 //       team,
@@ -504,18 +353,18 @@ app.post("/api/teams/:id/calculate-points", async (req, res) => {
 //       playerStats,
 //       message: `Auto-scored ${totalPoints} points! (${delta >= 0 ? '+' : ''}${delta})`
 //     });
-
 //   } catch (err) {
 //     console.error("Auto-score error:", err);
-    
-//     // Graceful fallback scoring
+
 //     const fallbackPoints = Math.floor(Math.random() * 250) + 75;
 //     const delta = fallbackPoints - team.points;
-    
+
 //     team.points = fallbackPoints;
 //     team.lastScoredAt = new Date().toISOString();
-//     await saveTeams(teams);
-    
+
+//     await saveTeamToDb(team);
+//     await loadTeamsFromDb();
+
 //     res.json({
 //       team,
 //       delta,
@@ -525,74 +374,318 @@ app.post("/api/teams/:id/calculate-points", async (req, res) => {
 //   }
 // });
 
-// 🗑️ Reset (admin)
-app.delete("/api/teams", async (req, res) => {
-  teams = [];
-  await saveTeams(teams);
-  res.json({ message: "All teams cleared" });
+
+
+
+
+
+// app.delete("/api/teams", async (req, res) => {
+//   teams = [];
+//   await saveTeams(teams);
+//   res.json({ message: "All teams cleared" });
+// });
+
+
+
+
+
+
+
+// module.exports = app;
+
+
+
+const express = require("express");
+const cors = require("cors");
+const path = require("path");
+const axios = require("axios");
+const { MongoClient } = require("mongodb");
+
+const app = express();
+const PORT = process.env.PORT || 4000;
+
+const uri = process.env.MONGODB_URI;
+const client = new MongoClient(uri, {
+  serverSelectionTimeoutMS: 5000,
+  socketTimeoutMS: 10000,
+  maxPoolSize: 10,
 });
 
-// 404
-// app.use("*", (req, res) => res.status(404).json({ error: "Not found" }));
+let db, teamsCollection;
+let teams = [];
+let lastScoredMatches = new Set(); // Cache scored matches
 
+// MongoDB
+async function connectDb() {
+  if (!uri) throw new Error("MONGODB_URI required");
+  console.log("✅ MongoDB connecting...");
+  await client.connect();
+  db = client.db("iplfantasy2026");
+  teamsCollection = db.collection("teams");
+  app.locals.db = db;
+  app.locals.teamsCollection = teamsCollection;
+  await loadTeamsFromDb();
+}
 
+// Load & sort teams
+async function loadTeamsFromDb() {
+  teams = await teamsCollection
+    .find({})
+    .sort({ points: -1, lastScoredAt: -1 })
+    .toArray();
+  app.locals.teams = teams;
+}
 
-// async function connectDb() {
-//   console.log("✅ MongoDB connect call");
-//   try {
-//     // Add a 10s timeout wrapper
-//     const timeout = 10 * 1000;
-//     const result = await Promise.race([
-//       client.connect(),
-//       new Promise((_, reject) => {
-//         setTimeout(() => reject(new Error("MongoDB connect timeout")), timeout);
-//       })
-//     ]);
-//     db = client.db("iplfantasy2026");
-//     teamsCollection = db.collection("teams");
-//     console.log("✅ MongoDB connected");
-//     await initializeData();
-//     dbReady = true;
-//     console.log("✅ MongoDB connected & teams loaded");
-//   } catch (err) {
-//     console.error("❌ MongoDB connection failed:", err);
-//     console.error("❌ MONGODB_URI:", process.env.MONGODB_URI);
-//   }
-// }
+// Save team
+async function saveTeamToDb(team) {
+  await teamsCollection.updateOne(
+    { id: team.id },
+    { $set: { ...team, updatedAt: new Date().toISOString() } },
+    { upsert: true }
+  );
+}
 
-//connectDb();
+// Delete team
+async function deleteTeamFromDb(id) {
+  await teamsCollection.deleteOne({ id });
+}
 
-// connectDb()
-//   .then(async () => {
-//     await initializeData();
-//     dbReady = true;
-//     console.log("✅ MongoDB connected & teams loaded");
-//   })
-//   .catch(err => {
-//     console.error("❌ MongoDB connection failed:", err);
-//     console.error("❌ MONGODB_URI:", process.env.MONGODB_URI);
-//   });
+connectDb().catch(console.error);
+
+const CRICAPI_KEY = process.env.CRICAPI_KEY;
+
+app.use(cors());
+app.use(express.json());
+
+app.get("/", (req, res) => res.sendFile(path.join(__dirname, "index.html")));
+
+// 🔥 PAGE LOAD AUTO-SCORING (runs on /status)
+app.get("/status", async (req, res) => {
+  await loadTeamsFromDb();
+  
+  // Auto-score recent IPL matches on page load
+  const scored = await autoScoreRecentMatches();
+  
+  res.json({
+    status: "ok",
+    teamsCount: teams.length,
+    autoScoring: `${scored.updatedTeams || 0} teams updated`,
+    cricapi: CRICAPI_KEY ? "✅ Active" : "❌ Missing",
+    leaderboardTop: teams[0]?.points || 0,
+  });
+});
+
+// Auto-score RECENT COMPLETED MATCHES (page load trigger)
+async function autoScoreRecentMatches() {
+  let updatedTeams = 0;
+  try {
+    // Get recent IPL matches
+    const { data } = await axios.get("https://api.cricapi.com/v1/matches", {
+      params: { apikey: CRICAPI_KEY, limit: 20 },
+    });
+    
+    const recentIplMatches = data.filter(m =>
+      (m.series?.name || '').includes('IPL') &&
+      m.matchEnded // Only COMPLETED matches
+    );
+    
+    for (const match of recentIplMatches.slice(0, 5)) { // Last 5 completed
+      if (lastScoredMatches.has(match.id)) continue; // Skip if already scored
+      
+      // Get match stats
+      const { data: matchData } = await axios.get(`https://api.cricapi.com/v1/match/${match.id}`, {
+        params: { apikey: CRICAPI_KEY },
+      });
+      
+      // Score teams for this match
+      const matchTeams = teams.filter(t => t.match === match.id);
+      for (const team of matchTeams) {
+        const playerStats = getPlayerStats(team.players, matchData);
+        const totalPoints = calculateFantasyPoints(team.players, playerStats);
+        
+        // Update if better score
+        if (totalPoints > team.points) {
+          team.points = totalPoints;
+          team.playerStats = playerStats;
+          team.lastScoredAt = new Date().toISOString();
+          await saveTeamToDb(team);
+          updatedTeams++;
+        }
+      }
+      
+      lastScoredMatches.add(match.id);
+      console.log(`✅ Scored ${matchTeams.length} teams for ${match.name}`);
+    }
+    
+    await loadTeamsFromDb();
+  } catch (err) {
+    console.error("Auto-score error:", err.message);
+  }
+  
+  return { updatedTeams };
+}
+
+// Teams (sorted leaderboard)
+app.get("/api/teams", async (req, res) => {
+  await loadTeamsFromDb();
+  res.json(teams);
+});
+
+// Create team
+app.post("/api/teams", async (req, res) => {
+  const { ownerName, teamName, match, players } = req.body;
+  
+  if (!Array.isArray(players) || players.length !== 11) {
+    return res.status(400).json({ error: "Exactly 11 players required" });
+  }
+
+  const team = {
+    id: Date.now().toString(),
+    ownerName: ownerName?.trim() || "Anonymous",
+    teamName: teamName?.trim() || "My XI",
+    match: match || "Practice Match",
+    players: players.map(p => p.trim()).filter(Boolean),
+    points: 0,
+    playerStats: {},
+    createdAt: new Date().toISOString(),
+    updatedAt: null,
+    lastScoredAt: null,
+  };
+
+  await saveTeamToDb(team);
+  await loadTeamsFromDb();
+  res.status(201).json(team);
+});
+
+// Single team
+app.get("/api/teams/:id", async (req, res) => {
+  const team = teams.find(t => t.id === req.params.id);
+  if (!team) return res.status(404).json({ error: "Team not found" });
+  res.json(team);
+});
+
+// Delete
+app.delete("/api/teams/:id", async (req, res) => {
+  await deleteTeamFromDb(req.params.id);
+  await loadTeamsFromDb();
+  res.json({ message: "Team deleted" });
+});
+
+// Matches dropdown
+app.get("/api/matches", async (req, res) => {
+  try {
+    const { data } = await axios.get("https://api.cricapi.com/v1/matches", {
+      params: { apikey: CRICAPI_KEY, limit: 50 },
+    });
+    const iplMatches = data.filter(m =>
+      m.series?.name?.includes("IPL") || m.name?.includes("IPL")
+    );
+    res.json(iplMatches.slice(0, 20));
+  } catch {
+    res.status(503).json({ error: "Matches unavailable" });
+  }
+});
+
+// Single team score check (shows if match complete)
+app.post("/api/teams/:id/calculate-points", async (req, res) => {
+  const team = teams.find(t => t.id === req.params.id);
+  if (!team) return res.status(404).json({ error: "Team not found" });
+
+  await autoScoreRecentMatches(); // Quick check
+  
+  res.json({
+    team,
+    message: `Latest: ${team.points} pts ${team.lastScoredAt ? '(scored)' : '(match pending)'}`,
+  });
+});
+
+app.use((req, res) => res.status(404).json({ error: "Not found" }));
 
 module.exports = app;
 
-// 🚀 Start Server
-// async function startServer() {
-//   await initializeData();
-//   module.exports = app;
-//   // app.listen(PORT, () => {
-//   //   console.log(`\n🚀 IPL 2026 Fantasy API v2.0`);
-//   //   console.log(`📡 http://localhost:${PORT}`);
-//   //   console.log(`💾 Data: ${DATA_FILE}`);
-//   //   console.log(`📊 ${teams.length} teams loaded`);
-//   //   console.log(`🏏 CricAPI: ${CRICAPI_KEY !== "YOUR_API_KEY_HERE" ? "✅ Ready" : "❌ Add key"}`);
-//   //   console.log(`\nTest endpoints:`);
-//   //   console.log(`  GET  /api/teams`);
-//   //   console.log(`  GET  /api/matches`);
-//   //   console.log(`  POST /api/teams`);
-//   // });
-// }
+if (require.main === module) {
+  app.listen(PORT, () => {
+    console.log(`🚀 Auto-score on page load: http://localhost:${PORT}`);
+  });
+}
 
-// startServer().catch(err => {
-//   console.error("Server failed to start:", err);
-//   process.exit(1);
-// });
+// Scoring functions
+function getPlayerStats(players, matchData) {
+  const stats = {};
+  players.forEach(playerName => {
+    const s = { runs: 0, wickets: 0, fours: 0, sixes: 0, catches: 0 };
+    
+    if (matchData?.players) {
+      const clean = playerName.toLowerCase().split('(')[0].trim();
+      const player = matchData.players.find(p =>
+        p.name?.toLowerCase().includes(clean) ||
+        clean.includes(p.name?.toLowerCase())
+      );
+      if (player) Object.assign(s, {
+        runs: player.runs || 0,
+        wickets: player.wickets || 0,
+        fours: player.fours || 0,
+        sixes: player.sixes || 0,
+        catches: player.catches || 0,
+      });
+    }
+    
+    stats[playerName] = s;
+  });
+  return stats;
+}
+
+function calculateFantasyPoints(players, stats) {
+  let total = 0;
+  players.forEach(name => {
+    const s = stats[name] || {};
+    let pts = 
+      (s.runs || 0) + 
+      (s.fours || 0) + 
+      ((s.sixes || 0) * 2) + 
+      ((s.wickets || 0) * 25) + 
+      ((s.catches || 0) * 8);
+    
+    if ((s.runs || 0) >= 50) pts += 10;
+    if ((s.wickets || 0) >= 3) pts += 5;
+    
+    if (name.toLowerCase().includes('(c)')) pts *= 2;
+    else if (name.toLowerCase().includes('(vc)')) pts *= 1.5;
+    
+    total += Math.floor(pts);
+  });
+  return total;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
