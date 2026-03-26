@@ -64,7 +64,7 @@
     </nav>
 
     <main>
-      // CREATE TEAM 
+      
       <section class="card" id="tab-create">
         <div class="card-header">
           <div>
@@ -94,7 +94,7 @@
         <button class="btn-primary" id="saveTeamBtn">💾 Save Team</button>
       </section>
 
-      //MY TEAMS 
+       
       <section class="card" id="tab-teams" style="display:none;">
         <div class="card-header">
           <div><div class="card-title">My Teams</div><div class="card-subtitle">Auto-score with real stats</div></div>
@@ -103,7 +103,7 @@
         <div id="teamList"><div class="small">Create your first fantasy XI!</div></div>
       </section>
 
-      //LEADERBOARD 
+       
       <section class="card" id="tab-leaderboard" style="display:none;">
         <div class="card-header">
           <div><div class="card-title">Live Leaderboard</div><div class="card-subtitle">Top fantasy teams</div></div>
@@ -251,130 +251,7 @@
   });
 }
 
-    // function renderTeams() {
-    //   const list = document.getElementById("teamList");
-    //   const count = document.getElementById("teams-count");
-      
-    //   if (!teams.length) {
-    //     list.innerHTML = '<div class="small">Create your first fantasy XI!</div>';
-    //     count.textContent = "0 teams";
-    //     return;
-    //   }
-
-    //   count.textContent = teams.length;
-    //   list.innerHTML = "";
-
-    //   teams.forEach(t => {
-    //     const row = document.createElement("div");
-    //     row.className = "team-row";
-
-    //     // Left side
-    //     const left = document.createElement("div");
-    //     const name = document.createElement("div");
-    //     name.className = "team-name";
-    //     name.textContent = t.teamName;
-        
-    //     const meta = document.createElement("div");
-    //     meta.className = "owner-name";
-    //     meta.innerHTML = `
-    //       ${t.ownerName}
-    //       <span style="font-size:0.65rem; color: #9ca3af; margin-left: 4px;">
-    //         • Match: ${t.match}
-    //       </span>
-    //     `;
-        
-    //     const players = document.createElement("div");
-    //     players.className = "player-chips";
-    //     (t.players || []).slice(0, 4).forEach(p => {
-    //       const chip = document.createElement("span");
-    //       chip.className = "chip";
-    //       chip.textContent = p;
-    //       players.appendChild(chip);
-    //     });
-    //     if (t.players.length > 4) {
-    //       const more = document.createElement("span");
-    //       more.className = "chip";
-    //       more.textContent = `+${t.players.length - 4}`;
-    //       players.appendChild(more);
-    //     }
-
-    //     left.append(name, meta, players);
-
-    //     // Right side: Points + buttons
-    //     const right = document.createElement("div");
-    //     right.style.textAlign = "right";
-    //     right.style.minWidth = "120px";
-
-    //     const pointsPill = document.createElement("div");
-    //     pointsPill.className = "points-pill";
-    //     pointsPill.textContent = t.points + " pts";
-
-    //     const input = document.createElement("input");
-    //     input.type = "number";
-    //     input.placeholder = "+/- pts";
-    //     input.style.width = "45px";
-    //     input.style.marginTop = "4px";
-    //     input.style.textAlign = "center";
-
-    //     const updateBtn = document.createElement("button");
-    //     updateBtn.textContent = "Update";
-    //     updateBtn.style.fontSize = "0.65rem";
-    //     updateBtn.style.padding = "2px 6px";
-    //     updateBtn.style.marginLeft = "2px";
-
-    //     const autoScoreBtn = document.createElement("button");
-    //     autoScoreBtn.textContent = "Auto";
-    //     autoScoreBtn.style.fontSize = "0.65rem";
-    //     autoScoreBtn.style.padding = "2px 6px";
-    //     autoScoreBtn.style.background = "linear-gradient(135deg, #8b5cf6, #a855f7)";
-    //     autoScoreBtn.style.color = "white";
-    //     autoScoreBtn.style.border = "none";
-    //     autoScoreBtn.style.borderRadius = "999px";
-
-    //     // Update button handler
-    //     updateBtn.addEventListener("click", async () => {
-    //       const delta = Number(input.value || 0);
-    //       if (isNaN(delta) || delta === 0) return alert("Enter points change");
-          
-    //       const res = await fetch(`${API_BASE}/api/teams/${t.id}/points`, {
-    //         method: "PATCH",
-    //         headers: { "Content-Type": "application/json" },
-    //         body: JSON.stringify({ delta })
-    //       });
-          
-    //       if (res.ok) {
-    //         const data = await res.json();
-    //         const idx = teams.findIndex(x => x.id === data.id);
-    //         teams[idx] = data;
-    //         renderTeams();
-    //       }
-    //     });
-
-    //     //Auto-score button handler
-    //     autoScoreBtn.addEventListener("click", async () => {
-    //       autoScoreBtn.disabled = true;
-    //       autoScoreBtn.textContent = "⏳";
-          
-    //       const res = await fetch(`${API_BASE}/api/teams/${t.id}/calculate-points`, { method: "POST" });
-          
-    //       if (res.ok) {
-    //         const data = await res.json();
-    //         const idx = teams.findIndex(x => x.id === data.team.id);
-    //         teams[idx] = data.team;
-    //         renderTeams();
-    //       } else {
-    //         alert("Auto-scoring failed");
-    //       }
-          
-    //       autoScoreBtn.disabled = false;
-    //       autoScoreBtn.textContent = "Auto";
-    //     });
-
-    //     right.append(pointsPill, input, updateBtn, autoScoreBtn);
-    //     row.append(left, right);
-    //     list.appendChild(row);
-    //   });
-    // }
+    
 
     // Render leaderboard (with match)
     function renderLeaderboard() {
