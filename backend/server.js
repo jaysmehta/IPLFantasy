@@ -603,113 +603,183 @@ app.delete("/api/teams/:id", async (req, res) => {
   res.json({ message: "Deleted" });
 });
 
-// Matches
+
+
+// 🆕 FIXED: Robust IPL matches endpoint
 // app.get("/api/matches", async (req, res) => {
 //   try {
-//     const { data } = await axios.get("https://api.cricapi.com/v1/matches", {
-//       params: { apikey: CRICAPI_KEY, limit: 30 },
+//     if (!CRICAPI_KEY) {
+//       // Fallback demo matches
+//       return res.json([
+//         {
+//           id: "12345",
+//           name: "MI vs CSK - Final",
+//           series: { name: "IPL 2026" },
+//           matchStarted: true,
+//           matchEnded: false
+//         },
+//         {
+//           id: "12346", 
+//           name: "RCB vs PBKS - Qualifier 1",
+//           series: { name: "IPL 2026" },
+//           matchStarted: true,
+//           matchEnded: true
+//         },
+//         {
+//           id: "12347",
+//           name: "KKR vs SRH - Eliminator", 
+//           series: { name: "IPL 2026" },
+//           matchStarted: true,
+//           matchEnded: true
+//         }
+//       ]);
+//     }
+
+//     const response = await axios.get("https://api.cricapi.com/v1/matches", {
+//       params: { 
+//         apikey: CRICAPI_KEY, 
+//         limit: 50 
+//       },
+//       timeout: 10000
 //     });
+
+//     // 🆕 SAFE DATA EXTRACTION
+//     let matches = [];
+//     if (Array.isArray(response.data)) {
+//       matches = response.data;
+//     } else if (Array.isArray(response.data?.data)) {
+//       matches = response.data.data;
+//     }
+
+//     // 🆕 FILTER & MAP with fallbacks
+//     const iplMatches = matches
+//       .filter(m => m && (
+//         (m.name || '').toLowerCase().includes('indian premier league 2026')
+//       ))
+//       .map(m => ({
+//         id: m.id || m.unique_id || `demo_${Math.random().toString(36).slice(2)}`,
+//         name: m.name || `${m.team1 || 'Team A'} vs ${m.team2 || 'Team B'}`,
+//         series: { 
+//           name: m.series?.name || m.series?.shortName || 'IPL 2026'
+//         },
+//         matchStarted: m.matchStarted || false,
+//         matchEnded: m.matchEnded || false,
+//         date: m.date || m.dateTimeGMT
+//       }))
+//       .slice(0, 20);
+
+//     console.log(`✅ Returning ${iplMatches.length} IPL matches`);
+//     res.json(iplMatches);
+
+//   } catch (error) {
+//     console.error("❌ Matches API error:", error.message);
     
-//     const matches = Array.isArray(data) ? data : 
-//                    Array.isArray(data?.data) ? data.data : [];
-    
-//     const iplMatches = matches.filter(m =>
-//       m && (
-//         (m.series?.name || '').toLowerCase().includes('ipl') ||
-//         (m.name || '').toLowerCase().includes('ipl')
-//       )
-//     );
-    
-//     res.json(iplMatches.slice(0, 15));
-//   } catch {
-//     res.status(503).json({ error: "Matches unavailable" });
+//     // 🆕 ROBUST FALLBACK
+//     res.json([
+//       {
+//         id: "practice",
+//         name: "Practice Match - Rohit XI vs Kohli XI", 
+//         series: { name: "IPL Practice" },
+//         matchStarted: true,
+//         matchEnded: true
+//       },
+//       {
+//         id: "demo1",
+//         name: "MI vs CSK - Demo Final",
+//         series: { name: "IPL 2026" },
+//         matchStarted: true,
+//         matchEnded: false
+//       }
+//     ]);
 //   }
 // });
 
-// 🆕 FIXED: Robust IPL matches endpoint
+
 app.get("/api/matches", async (req, res) => {
   try {
     if (!CRICAPI_KEY) {
-      // Fallback demo matches
+      // Fallback demo matches for IPL 2026
       return res.json([
         {
-          id: "12345",
-          name: "MI vs CSK - Final",
-          series: { name: "IPL 2026" },
-          matchStarted: true,
-          matchEnded: false
-        },
-        {
-          id: "12346", 
-          name: "RCB vs PBKS - Qualifier 1",
-          series: { name: "IPL 2026" },
-          matchStarted: true,
-          matchEnded: true
-        },
-        {
-          id: "12347",
-          name: "KKR vs SRH - Eliminator", 
-          series: { name: "IPL 2026" },
-          matchStarted: true,
-          matchEnded: true
+          id: "demo1",
+          name: "Kolkata Knight Riders vs Delhi Capitals, 70th Match, IPL 2026",
+          matchType: "t20",
+          status: "Practice match",
+          venue: "Eden Gardens, Kolkata",
+          date: "2026-05-24",
+          dateTimeGMT: "2026-05-24T14:00:00",
+          teams: ["Kolkata Knight Riders", "Delhi Capitals"],
+          teamInfo: [
+            { name: "Delhi Capitals", shortname: "DC" },
+            { name: "Kolkata Knight Riders", shortname: "KKR" }
+          ]
         }
       ]);
     }
 
     const response = await axios.get("https://api.cricapi.com/v1/matches", {
-      params: { 
-        apikey: CRICAPI_KEY, 
-        limit: 50 
+      params: {
+        apikey: CRICAPI_KEY,
+        limit: 50  // Get more to ensure IPL matches are captured
       },
       timeout: 10000
     });
 
-    // 🆕 SAFE DATA EXTRACTION
+    // Handle exact CricAPI structure: response.data.data = matches array
     let matches = [];
-    if (Array.isArray(response.data)) {
-      matches = response.data;
-    } else if (Array.isArray(response.data?.data)) {
+    if (Array.isArray(response.data?.data)) {
       matches = response.data.data;
+    } else if (Array.isArray(response.data)) {
+      matches = response.data;
     }
 
-    // 🆕 FILTER & MAP with fallbacks
+    // Filter for IPL 2026 matches (case-insensitive, flexible)
     const iplMatches = matches
-      .filter(m => m && (
-        (m.name || '').toLowerCase().includes('indian premier league 2026')
-      ))
+      .filter(m => 
+        m &&
+        (m.name?.toLowerCase().includes('indian premier league 2026') ||
+         m.name?.toLowerCase().includes('ipl 2026') ||
+         m.series_id === "87c62aac-bc3c-4738-ab93-19da0690488f")  // From your sample
+      )
       .map(m => ({
-        id: m.id || m.unique_id || `demo_${Math.random().toString(36).slice(2)}`,
-        name: m.name || `${m.team1 || 'Team A'} vs ${m.team2 || 'Team B'}`,
-        series: { 
-          name: m.series?.name || m.series?.shortName || 'IPL 2026'
-        },
-        matchStarted: m.matchStarted || false,
-        matchEnded: m.matchEnded || false,
-        date: m.date || m.dateTimeGMT
+        id: m.id,
+        name: m.name,
+        matchType: m.matchType,
+        status: m.status,
+        venue: m.venue,
+        date: m.date,
+        dateTimeGMT: m.dateTimeGMT,
+        teams: m.teams,
+        teamInfo: m.teamInfo,  // Includes shortname, img
+        series_id: m.series_id,
+        fantasyEnabled: m.fantasyEnabled,
+        matchStarted: m.matchStarted,
+        matchEnded: m.matchEnded
       }))
-      .slice(0, 20);
+      .slice(0, 20);  // Limit response size
 
-    console.log(`✅ Returning ${iplMatches.length} IPL matches`);
+    console.log(`✅ Returning ${iplMatches.length} IPL 2026 matches`);
     res.json(iplMatches);
 
   } catch (error) {
     console.error("❌ Matches API error:", error.message);
     
-    // 🆕 ROBUST FALLBACK
+    // Robust fallback matching your sample structure
     res.json([
       {
-        id: "practice",
-        name: "Practice Match - Rohit XI vs Kohli XI", 
-        series: { name: "IPL Practice" },
-        matchStarted: true,
-        matchEnded: true
-      },
-      {
-        id: "demo1",
-        name: "MI vs CSK - Demo Final",
-        series: { name: "IPL 2026" },
-        matchStarted: true,
-        matchEnded: false
+        id: "aec16058-7741-4f3d-a1b0-68d7210b29c9",
+        name: "Kolkata Knight Riders vs Delhi Capitals, 70th Match, Indian Premier League 2026",
+        matchType: "t20",
+        status: "Match starts at May 24, 14:00 GMT",
+        venue: "Eden Gardens, Kolkata",
+        date: "2026-05-24",
+        dateTimeGMT: "2026-05-24T14:00:00",
+        teams: ["Kolkata Knight Riders", "Delhi Capitals"],
+        teamInfo: [
+          { name: "Delhi Capitals", shortname: "DC" },
+          { name: "Kolkata Knight Riders", shortname: "KKR" }
+        ],
+        series_id: "87c62aac-bc3c-4738-ab93-19da0690488f"
       }
     ]);
   }
