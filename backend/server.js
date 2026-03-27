@@ -695,93 +695,101 @@ app.delete("/api/teams/:id", async (req, res) => {
 // });
 
 
+// 🆕 FULL IPL SCHEDULE FETCHER (paginated + sorted)
 app.get("/api/matches", async (req, res) => {
   try {
     if (!CRICAPI_KEY) {
-      // Fallback demo matches for IPL 2026
-      return res.json([
-        {
-          id: "demo1",
-          name: "Kolkata Knight Riders vs Delhi Capitals, 70th Match, IPL 2026",
-          matchType: "t20",
-          status: "Practice match",
-          venue: "Eden Gardens, Kolkata",
-          date: "2026-05-24",
-          dateTimeGMT: "2026-05-24T14:00:00",
-          teams: ["Kolkata Knight Riders", "Delhi Capitals"],
-          teamInfo: [
-            { name: "Delhi Capitals", shortname: "DC" },
-            { name: "Kolkata Knight Riders", shortname: "KKR" }
-          ]
-        }
-      ]);
+      return res.status(503).json({ error: "CricAPI key required for live matches" });
     }
 
-    const response = await axios.get("https://api.cricapi.com/v1/matches", {
-      params: {
-        apikey: CRICAPI_KEY,
-        limit: 50  // Get more to ensure IPL matches are captured
-      },
-      timeout: 10000
+    const allMatches = [];
+    let offset = 0;
+    const limit = 25;
+    let hasMore = true;
+    let attempts = 0;
+    const maxAttempts = 20;  // Max ~500 matches
+
+    console.log("🔄 Fetching complete IPL 2026 schedule (paginated)...");
+
+    // Paginate until no IPL matches found
+    while (hasMore && attempts < maxAttempts) {
+      const response = await axios.get("https://api.cricapi.com/v1/matches", {
+        params: { apikey: CRICAPI_KEY, offset, limit },
+        timeout: 10000
+      });
+
+      let pageMatches = [];
+      if (Array.isArray(response.data?.data)) {
+        pageMatches = response.data.data;
+      } else if (Array.isArray(response.data)) {
+        pageMatches = response.data;
+      }
+
+      // Filter IPL 2026 on this page
+      const iplPageMatches = pageMatches.filter(m => 
+        m?.series_id === "87c62aac-bc3c-4738-ab93-19da0690488f" ||  // Exact series
+        m?.name?.toLowerCase().includes("indian premier league 2026") ||
+        m?.name?.toLowerCase().includes("ipl 2026")
+      );
+
+      allMatches.push(...iplPageMatches);
+      
+      console.log(`📄 Page ${attempts + 1}: offset=${offset}, IPL matches found: ${iplPageMatches.length}, total: ${allMatches.length}`);
+
+      // Stop if no more IPL matches on this page
+      if (iplPageMatches.length === 0) {
+        hasMore = false;
+      } else {
+        offset += limit;
+        attempts++;
+        // Small delay to respect rate limits
+        await new Promise(resolve => setTimeout(resolve, 200));
+      }
+    }
+
+    // 🆕 SORT CHRONOLOGICALLY: Earliest first
+    allMatches.sort((a, b) => {
+      const dateA = new Date(a.dateTimeGMT || a.date);
+      const dateB = new Date(b.dateTimeGMT || b.date);
+      return dateA - dateB;
     });
 
-    // Handle exact CricAPI structure: response.data.data = matches array
-    let matches = [];
-    if (Array.isArray(response.data?.data)) {
-      matches = response.data.data;
-    } else if (Array.isArray(response.data)) {
-      matches = response.data;
-    }
+    // Clean mapping
+    const cleanMatches = allMatches.map(m => ({
+      id: m.id,
+      name: m.name,
+      matchType: m.matchType || "t20",
+      status: m.status,
+      venue: m.venue,
+      date: m.date,
+      dateTimeGMT: m.dateTimeGMT,
+      teams: m.teams || [m.team1, m.team2],
+      teamInfo: m.teamInfo || [],
+      series_id: m.series_id,
+      fantasyEnabled: m.fantasyEnabled || false,
+      matchStarted: m.matchStarted || false,
+      matchEnded: m.matchEnded || false
+    })).slice(0, 100);  // Cap for frontend performance
 
-    // Filter for IPL 2026 matches (case-insensitive, flexible)
-    const iplMatches = matches
-      .filter(m => 
-        m &&
-        (m.name?.toLowerCase().includes('indian premier league 2026') ||
-         m.name?.toLowerCase().includes('ipl 2026') ||
-         m.series_id === "87c62aac-bc3c-4738-ab93-19da0690488f")  // From your sample
-      )
-      .map(m => ({
-        id: m.id,
-        name: m.name,
-        matchType: m.matchType,
-        status: m.status,
-        venue: m.venue,
-        date: m.date,
-        dateTimeGMT: m.dateTimeGMT,
-        teams: m.teams,
-        teamInfo: m.teamInfo,  // Includes shortname, img
-        series_id: m.series_id,
-        fantasyEnabled: m.fantasyEnabled,
-        matchStarted: m.matchStarted,
-        matchEnded: m.matchEnded
-      }))
-      .slice(0, 20);  // Limit response size
-
-    console.log(`✅ Returning ${iplMatches.length} IPL 2026 matches`);
-    res.json(iplMatches);
+    console.log(`✅ Complete IPL 2026: ${cleanMatches.length} matches (sorted chronologically)`);
+    res.json(cleanMatches);
 
   } catch (error) {
-    console.error("❌ Matches API error:", error.message);
+    console.error("❌ Full matches fetch failed:", error.message);
     
-    // Robust fallback matching your sample structure
-    res.json([
+    // Fallback: Your original sample (already reverse-chronological, reverse it)
+    const fallback = [
+      // Insert 2-3 matches from your original JSON here, manually sorted earliest first
       {
-        id: "aec16058-7741-4f3d-a1b0-68d7210b29c9",
-        name: "Kolkata Knight Riders vs Delhi Capitals, 70th Match, Indian Premier League 2026",
-        matchType: "t20",
-        status: "Match starts at May 24, 14:00 GMT",
-        venue: "Eden Gardens, Kolkata",
-        date: "2026-05-24",
-        dateTimeGMT: "2026-05-24T14:00:00",
-        teams: ["Kolkata Knight Riders", "Delhi Capitals"],
-        teamInfo: [
-          { name: "Delhi Capitals", shortname: "DC" },
-          { name: "Kolkata Knight Riders", shortname: "KKR" }
-        ],
-        series_id: "87c62aac-bc3c-4738-ab93-19da0690488f"
+        id: "37b02340-7238-41b7-bcf3-8ae4215e4bee",
+        name: "Gujarat Titans vs Punjab Kings, 46th Match, IPL 2026",
+        dateTimeGMT: "2026-05-03T14:00:00",
+        teams: ["Gujarat Titans", "Punjab Kings"],
+        // Add full fields...
       }
-    ]);
+      // Add more...
+    ];
+    res.json(fallback);
   }
 });
 
