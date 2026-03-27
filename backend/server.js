@@ -675,9 +675,7 @@ app.get("/api/matches", async (req, res) => {
     // 🆕 FILTER & MAP with fallbacks
     const iplMatches = matches
       .filter(m => m && (
-        (m.series?.name || '').toLowerCase().includes('ipl') ||
-        (m.series?.shortName || '').toLowerCase().includes('ipl') ||
-        (m.name || '').toLowerCase().includes('ipl')
+        (m.name || '').toLowerCase().includes('indian premier league 2026')
       ))
       .map(m => ({
         id: m.id || m.unique_id || `demo_${Math.random().toString(36).slice(2)}`,
