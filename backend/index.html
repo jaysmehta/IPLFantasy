@@ -546,7 +546,7 @@
     // NEW: Load squad
     async function loadSquad(teamNum) {
       try {
-        const res = await fetch(`${APIBASE}/api/squad?matchId=${currentMatch.id}&team=${teamNum}`);
+        const res = await fetch(`${APIBASE}/api/match_squad?id=${currentMatch.id}`);
         if (!res.ok) throw new Error(await res.text());
         const data = await res.json();
         squads[`team${teamNum}`] = data.players || [];
