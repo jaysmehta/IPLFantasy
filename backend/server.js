@@ -605,94 +605,7 @@ app.delete("/api/teams/:id", async (req, res) => {
 
 
 
-// 🆕 FIXED: Robust IPL matches endpoint
-// app.get("/api/matches", async (req, res) => {
-//   try {
-//     if (!CRICAPI_KEY) {
-//       // Fallback demo matches
-//       return res.json([
-//         {
-//           id: "12345",
-//           name: "MI vs CSK - Final",
-//           series: { name: "IPL 2026" },
-//           matchStarted: true,
-//           matchEnded: false
-//         },
-//         {
-//           id: "12346", 
-//           name: "RCB vs PBKS - Qualifier 1",
-//           series: { name: "IPL 2026" },
-//           matchStarted: true,
-//           matchEnded: true
-//         },
-//         {
-//           id: "12347",
-//           name: "KKR vs SRH - Eliminator", 
-//           series: { name: "IPL 2026" },
-//           matchStarted: true,
-//           matchEnded: true
-//         }
-//       ]);
-//     }
 
-//     const response = await axios.get("https://api.cricapi.com/v1/matches", {
-//       params: { 
-//         apikey: CRICAPI_KEY, 
-//         limit: 50 
-//       },
-//       timeout: 10000
-//     });
-
-//     // 🆕 SAFE DATA EXTRACTION
-//     let matches = [];
-//     if (Array.isArray(response.data)) {
-//       matches = response.data;
-//     } else if (Array.isArray(response.data?.data)) {
-//       matches = response.data.data;
-//     }
-
-//     // 🆕 FILTER & MAP with fallbacks
-//     const iplMatches = matches
-//       .filter(m => m && (
-//         (m.name || '').toLowerCase().includes('indian premier league 2026')
-//       ))
-//       .map(m => ({
-//         id: m.id || m.unique_id || `demo_${Math.random().toString(36).slice(2)}`,
-//         name: m.name || `${m.team1 || 'Team A'} vs ${m.team2 || 'Team B'}`,
-//         series: { 
-//           name: m.series?.name || m.series?.shortName || 'IPL 2026'
-//         },
-//         matchStarted: m.matchStarted || false,
-//         matchEnded: m.matchEnded || false,
-//         date: m.date || m.dateTimeGMT
-//       }))
-//       .slice(0, 20);
-
-//     console.log(`✅ Returning ${iplMatches.length} IPL matches`);
-//     res.json(iplMatches);
-
-//   } catch (error) {
-//     console.error("❌ Matches API error:", error.message);
-    
-//     // 🆕 ROBUST FALLBACK
-//     res.json([
-//       {
-//         id: "practice",
-//         name: "Practice Match - Rohit XI vs Kohli XI", 
-//         series: { name: "IPL Practice" },
-//         matchStarted: true,
-//         matchEnded: true
-//       },
-//       {
-//         id: "demo1",
-//         name: "MI vs CSK - Demo Final",
-//         series: { name: "IPL 2026" },
-//         matchStarted: true,
-//         matchEnded: false
-//       }
-//     ]);
-//   }
-// });
 
 
 // 🆕 FULL IPL SCHEDULE FETCHER (paginated + sorted)
@@ -702,12 +615,10 @@ app.get("/api/matches", async (req, res) => {
       return res.status(503).json({ error: "CricAPI key required" });
     }
 
-    // 🆕 HARDCODED: First 25 matches only (offset=0)
-    const response = await axios.get("https://api.cricapi.com/v1/matches", {
+    // 🆕 Use ecricscore API (simpler format, chronological)
+    const response = await axios.get("https://api.cricapi.com/v1/ecricscore", {
       params: { 
-        apikey: CRICAPI_KEY, 
-        offset: 45,   // First page
-        limit: 25    // Exactly 25 matches
+        apikey: CRICAPI_KEY 
       },
       timeout: 10000
     });
@@ -722,37 +633,54 @@ app.get("/api/matches", async (req, res) => {
     // Filter IPL 2026 matches
     const iplMatches = matches
       .filter(m => 
-        m?.series_id === "87c62aac-bc3c-4738-ab93-19da0690488f" ||
-        m?.name?.toLowerCase().includes("indian premier league 2026")
+        m?.series?.includes("Indian Premier League") ||
+        (m?.t1s?.includes("[") && m.t1s.includes("CSK") || m.t2s.includes("CSK")) ||
+        (m.t1 || "").includes("[CSK") || (m.t2 || "").includes("[CSK") ||
+        (m.t1 || "").includes("[KKR") || (m.t2 || "").includes("[KKR") ||
+        (m.t1 || "").includes("[MI") || (m.t2 || "").includes("[MI") ||
+        (m.t1 || "").includes("[RCB") || (m.t2 || "").includes("[RCB") ||
+        (m.t1 || "").includes("[SRH") || (m.t2 || "").includes("[SRH") ||
+        (m.t1 || "").includes("[DC") || (m.t2 || "").includes("[DC") ||
+        (m.t1 || "").includes("[LSG") || (m.t2 || "").includes("[LSG") ||
+        (m.t1 || "").includes("[PBKS") || (m.t2 || "").includes("[PBKS") ||
+        (m.t1 || "").includes("[RR") || (m.t2 || "").includes("[RR") ||
+        (m.t1 || "").includes("[GT") || (m.t2 || "").includes("[GT")
       )
       .map(m => ({
         id: m.id,
-        name: m.name,
+        name: `${m.t1} vs ${m.t2}`,  // Format: "CSK vs PBKS"
         matchType: m.matchType || "t20",
         status: m.status,
-        venue: m.venue,
-        date: m.date,
+        venue: m.venue || "TBD",  // ecricscore doesn't always have venue
+        date: m.dateTimeGMT.split("T")[0],
         dateTimeGMT: m.dateTimeGMT,
-        teams: m.teams || [],
-        teamInfo: m.teamInfo || [],
-        series_id: m.series_id,
-        fantasyEnabled: m.fantasyEnabled || false,
-        matchStarted: m.matchStarted || false,
-        matchEnded: m.matchEnded || false
+        teams: [m.t1, m.t2],
+        teamInfo: [
+          {
+            name: m.t1,
+            shortname: m.t1s || m.t1.split(" ")[0],
+            img: m.t1img
+          },
+          {
+            name: m.t2,
+            shortname: m.t2s || m.t2.split(" ")[0],
+            img: m.t2img
+          }
+        ],
+        series_id: "ipl-2026-ecricscore",  // Consistent ID
+        fantasyEnabled: true,
+        matchStarted: m.ms === "live",
+        matchEnded: m.ms === "result"
       }));
 
-    // 🆕 SORT CHRONOLOGICALLY: Earliest first
-    iplMatches.sort((a, b) => {
-      const dateA = new Date(a.dateTimeGMT || a.date);
-      const dateB = new Date(b.dateTimeGMT || b.date);
-      return dateA - dateB;  // First match → Last match
-    });
+    // Sort chronologically (already mostly sorted, but ensure)
+    iplMatches.sort((a, b) => new Date(a.dateTimeGMT) - new Date(b.dateTimeGMT));
 
-    console.log(`✅ First 25 matches: ${iplMatches.length} IPL games (sorted by date)`);
-    res.json(iplMatches.slice(0, 25));  // Ensure max 25
+    console.log(`✅ eCricScore IPL: ${iplMatches.length} matches (chronological)`);
+    res.json(iplMatches.slice(0, 25));  // Limit 25 for dropdown
 
   } catch (error) {
-    console.error("❌ Matches error:", error.message);
+    console.error("❌ eCricScore error:", error.message);
     res.status(503).json({ error: "Matches unavailable" });
   }
 });
