@@ -616,7 +616,7 @@ app.get("/api/matches", async (req, res) => {
     }
 
     // 🆕 Use ecricscore API (simpler format, chronological)
-    const response = await axios.get("https://api.cricapi.com/v1/ecricscore", {
+    const response = await axios.get("https://api.cricapi.com/v1/cricscore", {
       params: { 
         apikey: CRICAPI_KEY 
       },
