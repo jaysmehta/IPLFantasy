@@ -1,4 +1,4 @@
-
+<!-- 
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -324,6 +324,419 @@
   </script>
 </body>
 </html>
+
+
+
+
+ -->
+
+
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>IPL 2026 Fantasy League</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <style>
+    /* ALL PREVIOUS STYLES REMAIN THE SAME */
+    :root {
+      --primary: #0f766e; --primary-dark: #115e59; --accent: #f97316;
+      --bg: #0b1120; --card: #020617; --border: #1e293b;
+      --text: #e5e7eb; --muted: #9ca3af;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: system-ui, sans-serif; }
+    body { background: radial-gradient(circle at top, #0f172a, #020617 60%); color: var(--text); min-height: 100vh; padding: 12px; }
+    .app-shell { max-width: 480px; margin: 0 auto 32px auto; }
+    header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; }
+    header h1 { font-size: 1.25rem; line-height: 1.2; }
+    header span { font-size: 0.7rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.08em; }
+    .pill { font-size: 0.7rem; border-radius: 999px; padding: 4px 10px; border: 1px solid rgba(148,163,184,0.5); color: var(--muted); }
+    nav.tabs { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; margin-bottom: 12px; }
+    nav button { border-radius: 999px; border: 1px solid transparent; padding: 8px; font-size: 0.8rem; background: rgba(15,23,42,0.9); color: var(--muted); display: flex; align-items: center; justify-content: center; gap: 6px; }
+    nav button.active { border-color: rgba(45,212,191,0.35); background: linear-gradient(135deg, #0f766e, #22c55e); color: #ecfeff; box-shadow: 0 8px 22px rgba(34,197,94,0.45); }
+    main { display: flex; flex-direction: column; gap: 12px; }
+    .card { border-radius: 18px; background: radial-gradient(circle at top left, #020617, #020617); border: 1px solid rgba(51,65,85,0.9); padding: 12px; }
+    .card-title { font-size: 0.9rem; font-weight: 600; }
+    .card-subtitle { font-size: 0.7rem; color: var(--muted); }
+    .badge { font-size: 0.65rem; padding: 3px 8px; border-radius: 999px; background: rgba(15,23,42,0.9); border: 1px solid rgba(148,163,184,0.4); color: var(--muted); }
+    .field-group { display: flex; flex-direction: column; gap: 6px; margin-top: 8px; }
+    label { font-size: 0.75rem; color: var(--muted); }
+    input, select { width: 100%; padding: 8px 9px; border-radius: 10px; border: 1px solid rgba(51,65,85,0.9); background: rgba(15,23,42,0.9); color: var(--text); font-size: 0.8rem; outline: none; }
+    input:focus, select:focus { border-color: var(--primary); box-shadow: 0 0 0 1px rgba(45,212,194,0.25); }
+    .btn-primary { width: 100%; margin-top: 10px; border-radius: 999px; border: none; padding: 9px 12px; font-size: 0.85rem; font-weight: 600; background: linear-gradient(135deg, #22c55e, #0ea5e9); color: #020617; box-shadow: 0 10px 25px rgba(34,197,94,0.45); }
+    .small { font-size: 0.7rem; color: var(--muted); margin-top: 6px; }
+    .team-row { display: flex; align-items: center; justify-content: space-between; padding: 6px 0; font-size: 0.8rem; }
+    .team-row:not(:first-child) { border-top: 1px dashed rgba(30,41,59,0.9); }
+    .team-name { font-weight: 500; }
+    .owner-name { font-size: 0.7rem; color: var(--muted); }
+    .points-pill { font-size: 0.7rem; padding: 3px 8px; border-radius: 999px; background: rgba(15,23,42,0.9); border: 1px solid rgba(74,222,128,0.55); color: #bbf7d0; }
+    .player-chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px; }
+    .chip { font-size: 0.7rem; padding: 4px 6px; border-radius: 999px; background: rgba(15,23,42,0.9); border: 1px solid rgba(148,163,184,0.45); color: var(--muted); }
+    .status { font-size: 0.65rem; color: #4ade80; margin-top: 4px; }
+    .api-status { font-size: 0.65rem; padding: 2px 6px; border-radius: 4px; background: rgba(34,197,94,0.2); color: #4ade80; margin-top: 6px; }
+    .api-error { background: rgba(239,68,68,0.2); color: #fca5a5; }
+    button:disabled { opacity: 0.5; cursor: not-allowed; }
+    
+    /* NEW SQUAD STYLES */
+    .inline-fields { display: flex; flex-direction: column; gap: 12px; }
+    .team-selector { display: flex; gap: 10px; margin-bottom: 12px; }
+    .btn-primary.small { width: auto; padding: 6px 12px; font-size: 0.75rem; }
+    .squad-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 8px; max-height: 300px; overflow-y: auto; }
+    .squad-player { padding: 8px; border: 1px solid var(--border); border-radius: 8px; background: rgba(15,23,42,0.9); cursor: pointer; transition: all 0.2s; }
+    .squad-player:hover { border-color: var(--accent); }
+    .squad-player.selected { border-color: var(--primary); background: rgba(15,118,110,0.3); }
+    .role-badge { font-size: 0.65rem; background: rgba(249,115,22,0.2); color: var(--accent); padding: 2px 6px; border-radius: 4px; margin-left: 4px; }
+    .selected-count { font-weight: 500; }
+    
+    @media (min-width: 600px) { body { padding: 16px; } header h1 { font-size: 1.4rem; } }
+  </style>
+</head>
+<body>
+  <div class="app-shell">
+    <header>
+      <div><span>IPL 2026 FANTASY</span><h1>Live League</h1></div>
+      <div class="pill" id="apiStatus">Connecting...</div>
+    </header>
+    <nav class="tabs">
+      <button class="active" data-tab="create">Create</button>
+      <button data-tab="teams">Teams</button>
+      <button data-tab="leaderboard">Leaderboard</button>
+    </nav>
+    <main>
+      <section class="card" id="tab-create">
+        <div class="card-header">
+          <div>
+            <div class="card-title">Create Fantasy XI</div>
+            <div class="card-subtitle">Live IPL matches + auto-scoring</div>
+          </div>
+          <span class="badge">Credits: 100/100</span>
+        </div>
+        <div class="field-group inline-fields">
+          <div>
+            <label>Manager</label>
+            <input id="ownerName" placeholder="Jay Mehta">
+          </div>
+          <div>
+            <label>Team name</label>
+            <input id="teamName" placeholder="Mumbai Mavericks">
+          </div>
+        </div>
+        <div class="field-group">
+          <label for="matchSelect">Live IPL Matches</label>
+          <select id="matchSelect"><option>Loading...</option></select>
+        </div>
+        <!-- NEW SQUAD SELECTOR -->
+        <div class="field-group">
+          <label>Team Squad (Select exactly 11)</label>
+          <div class="team-selector">
+            <button class="btn-primary small" id="loadTeam1" disabled>Load Team 1</button>
+            <button class="btn-primary small" id="loadTeam2" disabled>Load Team 2</button>
+          </div>
+          <div id="squadContainer" class="squad-grid">
+            <div class="small">Select match, then load a team squad</div>
+          </div>
+          <div>
+            <label>Selected <span class="selected-count" id="selectedCount">(0/11)</span></label>
+            <div id="selectedList" class="player-chips"></div>
+          </div>
+        </div>
+        <button class="btn-primary" id="saveTeamBtn">Save Team</button>
+      </section>
+      <section class="card" id="tab-teams" style="display: none;">
+        <div class="card-header">
+          <div>
+            <div class="card-title">My Teams</div>
+            <div class="card-subtitle">Auto-score with real stats</div>
+          </div>
+          <span class="badge" id="teams-count">0</span>
+        </div>
+        <div id="teamList"><div class="small">Create your first fantasy XI!</div></div>
+      </section>
+      <section class="card" id="tab-leaderboard" style="display: none;">
+        <div class="card-header">
+          <div>
+            <div class="card-title">Live Leaderboard</div>
+            <div class="card-subtitle">Top fantasy teams</div>
+          </div>
+          <span class="badge">Live</span>
+        </div>
+        <div id="leaderboardList"><div class="small">Play matches to see rankings</div></div>
+      </section>
+    </main>
+  </div>
+  <script>
+    let teams = [];
+    const APIBASE = 'https://iplfantasy2026.vercel.app';
+    
+    // NEW GLOBAL STATE
+    let currentMatch = { id: '', team1: '', team2: '' };
+    let squads = { team1: [], team2: [] };
+    let selectedPlayers = [];
+
+    // Tab switching
+    document.querySelectorAll('nav button').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('nav button').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        const tab = btn.getAttribute('data-tab');
+        document.querySelectorAll('main section').forEach(s => s.style.display = 'none');
+        document.getElementById(`tab-${tab}`).style.display = 'block';
+        if (tab === 'teams') renderTeams();
+        if (tab === 'leaderboard') renderLeaderboard();
+      });
+    });
+
+    // API Status
+    async function checkAPI() {
+      try {
+        const res = await fetch(`${APIBASE}/status`);
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const data = await res.json();
+        console.log('API check', data);
+        const text = data.cricapi ? 'Active' : 'Missing';
+        const isOk = !!data.cricapi;
+        document.getElementById('apiStatus').textContent = `CricAPI: ${text}`;
+        document.getElementById('apiStatus').className = isOk ? 'pill api-status' : 'pill api-status api-error';
+      } catch (err) {
+        console.error('API check failed', err);
+        document.getElementById('apiStatus').textContent = 'Backend offline';
+        document.getElementById('apiStatus').className = 'pill api-status api-error';
+      }
+    }
+
+    // Load live IPL matches (ENHANCED)
+    async function loadLiveMatches() {
+      try {
+        const res = await fetch(`${APIBASE}/api/matches`);
+        const matches = await res.json();
+        const select = document.getElementById('matchSelect');
+        select.innerHTML = '<option value="">Select live IPL match</option>';
+        matches.slice(0, 25).forEach(match => {
+          const option = document.createElement('option');
+          option.value = match.id;
+          option.textContent = `${match.name}`;
+          option.dataset.team1 = match.team1 || match.teams?.[0] || '';
+          option.dataset.team2 = match.team2 || match.teams?.[1] || '';
+          select.appendChild(option);
+        });
+      } catch (err) {
+        document.getElementById('matchSelect').innerHTML = '<option>API unavailable - manual entry</option>';
+      }
+    }
+
+    // NEW: Match change handler
+    document.getElementById('matchSelect').addEventListener('change', (e) => {
+      const matchId = e.target.value;
+      if (!matchId) return;
+      const selectedOption = e.target.options[e.target.selectedIndex];
+      currentMatch = {
+        id: matchId,
+        team1: selectedOption.dataset.team1,
+        team2: selectedOption.dataset.team2
+      };
+      document.getElementById('loadTeam1').textContent = `Load ${currentMatch.team1}`;
+      document.getElementById('loadTeam2').textContent = `Load ${currentMatch.team2}`;
+      document.getElementById('loadTeam1').disabled = false;
+      document.getElementById('loadTeam2').disabled = false;
+      document.getElementById('squadContainer').innerHTML = '<div class="small">Click to load squad</div>';
+      selectedPlayers = []; updateSelected();
+    });
+
+    // NEW: Load squad
+    async function loadSquad(teamNum) {
+      try {
+        const res = await fetch(`${APIBASE}/api/squad?matchId=${currentMatch.id}&team=${teamNum}`);
+        if (!res.ok) throw new Error(await res.text());
+        const data = await res.json();
+        squads[`team${teamNum}`] = data.players || [];
+        renderSquad(teamNum);
+      } catch (err) {
+        console.error('Squad load failed:', err);
+        alert(`Team ${teamNum} squad unavailable—check CricAPI key`);
+      }
+    }
+    document.getElementById('loadTeam1').addEventListener('click', () => loadSquad(1));
+    document.getElementById('loadTeam2').addEventListener('click', () => loadSquad(2));
+
+    // NEW: Render selectable squad
+    function renderSquad(teamNum) {
+      const container = document.getElementById('squadContainer');
+      const teamName = currentMatch[`team${teamNum}`];
+      container.innerHTML = `<div style="font-weight:600; margin-bottom:8px;">${teamName} (${squads[`team${teamNum}`].length} players)</div>`;
+      squads[`team${teamNum}`].forEach((player, idx) => {
+        const div = document.createElement('div');
+        div.className = 'squad-player';
+        div.innerHTML = `
+          <label style="display:flex; align-items:center; cursor:pointer; width:100%;">
+            <input type="checkbox" style="margin-right:8px; width:16px; height:16px;">
+            <span>${player.short_name || player.name}</span>
+            <span class="role-badge">${player.credit || player.role || '?'}</span>
+          </label>
+        `;
+        const checkbox = div.querySelector('input');
+        checkbox.addEventListener('change', (e) => togglePlayer({ ...player, teamNum }, e.target.checked));
+        if (selectedPlayers.some(p => p.pid === player.pid || p.name === player.name)) {
+          checkbox.checked = true;
+          div.classList.add('selected');
+        }
+        container.appendChild(div);
+      });
+    }
+
+    // NEW: Toggle & limit to 11
+    function togglePlayer(player, checked) {
+      if (checked) {
+        if (selectedPlayers.length >= 11) {
+          alert('Max 11 players! Deselect first.');
+          return;
+        }
+        selectedPlayers.push(player);
+      } else {
+        selectedPlayers = selectedPlayers.filter(p => p.pid !== player.pid && p.name !== player.name);
+      }
+      updateSelected();
+    }
+
+    // NEW: Update selected UI
+    function updateSelected() {
+      document.getElementById('selectedCount').textContent = `(${selectedPlayers.length}/11)`;
+      document.getElementById('selectedList').innerHTML = selectedPlayers.map(p => 
+        `<span class="chip">${p.short_name || p.name} (${p.teamNum === 1 ? currentMatch.team1[0] : currentMatch.team2[0]})</span>`
+      ).join('');
+    }
+
+    // Load teams
+    async function loadTeams() {
+      console.log('Load Teams Called');
+      try {
+        const res = await fetch(`${APIBASE}/api/teams`);
+        teams = await res.json();
+        renderTeams();
+        renderLeaderboard();
+      } catch (err) {
+        console.error('Load teams failed', err);
+      }
+    }
+
+    // Render teams (unchanged)
+    function renderTeams() {
+      const list = document.getElementById('teamList');
+      const count = document.getElementById('teams-count');
+      if (!teams.length) {
+        list.innerHTML = '<div class="small">Create your first fantasy XI!</div>';
+        count.textContent = '0';
+        return;
+      }
+      count.textContent = String(teams.length);
+      list.innerHTML = '';
+      teams.forEach(t => {
+        const row = document.createElement('div');
+        row.className = 'team-row';
+        const left = document.createElement('div');
+        const name = document.createElement('div');
+        name.className = 'team-name';
+        name.textContent = t.teamName;
+        const meta = document.createElement('div');
+        meta.className = 'owner-name';
+        meta.innerHTML = `${t.ownerName} <span style="font-size:0.65rem; color:#9ca3af; margin-left:4px;">Match: ${t.match}</span>`;
+        const players = document.createElement('div');
+        players.className = 'player-chips';
+        t.players.slice(0, 4).forEach(p => {
+          const chip = document.createElement('span');
+          chip.className = 'chip';
+          chip.textContent = p;
+          players.appendChild(chip);
+        });
+        if (t.players.length > 4) {
+          const more = document.createElement('span');
+          more.className = 'chip';
+          more.textContent = `+${t.players.length - 4}`;
+          players.appendChild(more);
+        }
+        left.append(name, meta, players);
+        const right = document.createElement('div');
+        right.style.textAlign = 'right';
+        right.style.minWidth = '100px';
+        const pointsPill = document.createElement('div');
+        pointsPill.className = 'points-pill';
+        pointsPill.textContent = `${t.points || 0} pts`;
+        right.append(pointsPill);
+        row.append(left, right);
+        list.appendChild(row);
+      });
+    }
+
+    // Render leaderboard (unchanged)
+    function renderLeaderboard() {
+      const list = document.getElementById('leaderboardList');
+      const sorted = [...teams].sort((a, b) => (b.points || 0) - (a.points || 0));
+      if (!sorted.length) {
+        list.innerHTML = '<div class="small">Create teams to see rankings</div>';
+        return;
+      }
+      list.innerHTML = '';
+      sorted.slice(0, 10).forEach((t, idx) => {
+        const row = document.createElement('div');
+        row.className = 'team-row';
+        const pos = document.createElement('span');
+        pos.className = 'points-pill';
+        pos.style.minWidth = '24px';
+        pos.textContent = `#${idx + 1}`;
+        const teamInfo = document.createElement('div');
+        teamInfo.innerHTML = `
+          <div class="team-name">${t.teamName}</div>
+          <div class="owner-name">${t.ownerName} • Match: ${t.match}</div>
+        `;
+        const points = document.createElement('div');
+        points.className = 'points-pill';
+        points.textContent = `${t.points || 0} pts`;
+        row.append(pos, teamInfo, points);
+        list.appendChild(row);
+      });
+    }
+
+    // UPDATED Save team (uses selectedPlayers)
+    document.getElementById('saveTeamBtn').addEventListener('click', async () => {
+      const ownerName = document.getElementById('ownerName').value.trim() || 'Manager';
+      const teamName = document.getElementById('teamName').value.trim() || 'Untitled';
+      const match = document.getElementById('matchSelect').value || 'Practice match';
+      if (selectedPlayers.length !== 11) return alert('Select exactly 11 players!');
+      const players = selectedPlayers.map(p => p.short_name || p.name);
+      try {
+        const res = await fetch(`${APIBASE}/api/teams`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ ownerName, teamName, match, players })
+        });
+        if (res.ok) {
+          loadTeams();
+          alert('Team created! Check My Teams tab');
+          // Reset
+          selectedPlayers = [];
+          document.getElementById('squadContainer').innerHTML = '<div class="small">Select match, then load a team squad</div>';
+          document.getElementById('matchSelect').value = '';
+          document.getElementById('loadTeam1').disabled = true;
+          document.getElementById('loadTeam2').disabled = true;
+        } else {
+          const err = await res.json();
+          alert(`Error: ${err.error || 'Server error'}`);
+        }
+      } catch (err) {
+        alert('Save failed');
+      }
+    });
+
+    // Initialize
+    checkAPI();
+    loadLiveMatches();
+    loadTeams();
+    //setInterval(checkAPI, 30000); // Check API every 30s
+  </script>
+</body>
+</html>
+
+
 
 
 
