@@ -547,7 +547,7 @@
     async function loadSquad(teamNum) {
       try {
         const res = await fetch(`${APIBASE}/api/squad`);
-        if (!res.ok) throw new Error(await res.text());
+        //if (!res.ok) throw new Error(await res.text());
         const data = await res.json();
         squads[`team${teamNum}`] = data.players || [];
         renderSquad(teamNum);
