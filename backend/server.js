@@ -444,7 +444,7 @@ app.get('/api/squad', async (req, res) => {
 
   try {
     // Use fantasySquad endpoint
-    const squadResponse = await axios.get('https://api.cricapi.com/v1/fantasysquad', {
+    const squadResponse = await axios.get('https://api.cricapi.com/v1/match_squad', {
       params: { apikey: CRICAPI_KEY, matchId },
       timeout: 10000,
     });
