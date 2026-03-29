@@ -438,15 +438,15 @@ app.get('/status', async (req, res) => {
 
 // NEW: Squad endpoint
 app.get('/api/match_squad', async (req, res) => {
-  const { matchId, team } = req.query;
+  const { id, team } = req.query;
   if (!CRICAPI_KEY) return res.status(503).json({ error: 'CricAPI key required' });
-  if (!matchId) return res.status(400).json({ error: 'matchId required' });
+  if (!id) return res.status(400).json({ error: 'matchId required' });
 
   try {
     // Use fantasySquad endpoint
     console.log("calling squad API");
     const squadResponse = await axios.get('https://api.cricapi.com/v1/match_squad', {
-      params: { apikey: CRICAPI_KEY, matchId },
+      params: { apikey: CRICAPI_KEY, id },
       timeout: 10000,
     });
     let squadData = squadResponse.data;
