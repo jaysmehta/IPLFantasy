@@ -453,6 +453,7 @@ app.get('/api/match_squad', async (req, res) => {
 
     // Fallback to match details if no fantasySquad
     if (!squadData || !squadData.squad) {
+      console.log("calling fallback squad API");
       const matchRes = await axios.get(`https://api.cricapi.com/v1/match_squad`, {
         params: { apikey: CRICAPI_KEY, id : matchId },
       timeout: 10000,
@@ -460,11 +461,12 @@ app.get('/api/match_squad', async (req, res) => {
       squadData = { squad: [{ players: matchRes.data.players || [] }] };
     }
 
+    console.log("received response for squad API",squadData);
     // Filter for specific team if requested
-    let players = squadData.squad?.[0]?.players || [];
-    if (team === '2') {
-      players = squadData.squad?.[1]?.players || players;
-    }
+    let players = squadData.data?.[0]?.players || [];  // Team 1: data[0]
+if (team === '2') {
+  players = squadData.data?.[1]?.players || players;  // Team 2: data[1]
+}
 
     // Standardize player format
     players = players.map(p => ({
