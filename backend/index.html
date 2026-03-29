@@ -223,8 +223,8 @@
     }
 
     const res = await fetch(
-      `${APIBASE}/api/squad?matchId=${encodeURIComponent(matchId)}&team=${teamNum}`
-    );
+  `${APIBASE}/api/match_squad?matchId=${encodeURIComponent(matchId)}&team=${teamNum}`
+);
     if (!res.ok) throw new Error(await res.text());
     
     const data = await res.json();
