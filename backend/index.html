@@ -217,36 +217,23 @@
   async function loadSquad(teamNum) {
   try {
     const matchId = currentMatch?.id;
-    if (!matchId) {
-      alert("Please select a match first");
-      return;
-    }
+    if (!matchId) return alert("Select match first");
 
+    // UI → YOUR SERVER (no CricAPI exposure)
     const res = await fetch(
-  `${APIBASE}/api/match_squad?matchId=${encodeURIComponent(matchId)}&team=${teamNum}`
-);
-    if (!res.ok) throw new Error(await res.text());
+      `${APIBASE}/api/match_squad?id=${encodeURIComponent(matchId)}&team=${teamNum}`
+    );
     
+    if (!res.ok) throw new Error(await res.text());
     const data = await res.json();
+    
     squads[`team${teamNum}`] = data.players;
     renderSquad(teamNum);
   } catch (err) {
-    console.error("Squad load failed", err);
-    alert(`Team ${teamNum} squad unavailable - check CricAPI key`);
+    alert(`Team ${teamNum} unavailable`);
   }
 }
-    // async function loadSquad(teamNum) {
-    //   try {
-    //     const res = await fetch(`${APIBASE}/api/squad`);
-    //     //if (!res.ok) throw new Error(await res.text());
-    //     const data = await res.json();
-    //     squads[`team${teamNum}`] = data.players || [];
-    //     renderSquad(teamNum);
-    //   } catch (err) {
-    //     console.error('Squad load failed:', err);
-    //     alert(`Team ${teamNum} squad unavailable—check CricAPI key`);
-    //   }
-    // }
+    
     document.getElementById('loadTeam1').addEventListener('click', () => loadSquad(1));
     document.getElementById('loadTeam2').addEventListener('click', () => loadSquad(2));
 
