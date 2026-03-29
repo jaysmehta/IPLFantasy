@@ -444,6 +444,7 @@ app.get('/api/match_squad', async (req, res) => {
 
   try {
     // Use fantasySquad endpoint
+    console.log("calling squad API");
     const squadResponse = await axios.get('https://api.cricapi.com/v1/match_squad', {
       params: { apikey: CRICAPI_KEY, matchId },
       timeout: 10000,
@@ -477,6 +478,7 @@ app.get('/api/match_squad', async (req, res) => {
     res.json({ players });
   } catch (error) {
     console.error('Squad error:', error.message);
+    console.log("Error Squad",error.message);
     res.status(503).json({ error: 'Squad unavailable', details: error.message });
   }
 });
