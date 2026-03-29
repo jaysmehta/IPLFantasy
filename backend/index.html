@@ -1,334 +1,4 @@
-<!-- 
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <title>IPL 2026 Fantasy League</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <style>
-    /* [ALL PREVIOUS STYLES REMAIN THE SAME - keeping it compact] */
-    :root {
-      --primary: #0f766e; --primary-dark: #115e59; --accent: #f97316;
-      --bg: #0b1120; --card: #020617; --border: #1e293b;
-      --text: #e5e7eb; --muted: #9ca3af;
-    }
-    * { box-sizing: border-box; margin: 0; padding: 0; font-family: system-ui, sans-serif; }
-    body { background: radial-gradient(circle at top, #0f172a, #020617 60%); color: var(--text); min-height: 100vh; padding: 12px; }
-    .app-shell { max-width: 480px; margin: 0 auto 32px; }
-    header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; }
-    header h1 { font-size: 1.25rem; line-height: 1.2; }
-    header span { font-size: 0.7rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.08em; }
-    .pill { font-size: 0.7rem; border-radius: 999px; padding: 4px 10px; border: 1px solid rgba(148,163,184,0.5); color: var(--muted); }
-    nav.tabs { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; margin-bottom: 12px; }
-    nav button { border-radius: 999px; border: 1px solid transparent; padding: 8px; font-size: 0.8rem; background: rgba(15,23,42,0.9); color: var(--muted); display: flex; align-items: center; justify-content: center; gap: 6px; }
-    nav button.active { border-color: rgba(45,212,191,0.35); background: linear-gradient(135deg, #0f766e, #22c55e); color: #ecfeff; box-shadow: 0 8px 22px rgba(34,197,94,0.45); }
-    main { display: flex; flex-direction: column; gap: 12px; }
-    .card { border-radius: 18px; background: radial-gradient(circle at top left, #020617, #020617); border: 1px solid rgba(51,65,85,0.9); padding: 12px; }
-    .card-title { font-size: 0.9rem; font-weight: 600; }
-    .card-subtitle { font-size: 0.7rem; color: var(--muted); }
-    .badge { font-size: 0.65rem; padding: 3px 8px; border-radius: 999px; background: rgba(15,23,42,0.9); border: 1px solid rgba(148,163,184,0.4); color: var(--muted); }
-    .field-group { display: flex; flex-direction: column; gap: 6px; margin-top: 8px; }
-    label { font-size: 0.75rem; color: var(--muted); }
-    input, select { width: 100%; padding: 8px 9px; border-radius: 10px; border: 1px solid rgba(51,65,85,0.9); background: rgba(15,23,42,0.9); color: var(--text); font-size: 0.8rem; outline: none; }
-    input:focus, select:focus { border-color: var(--primary); box-shadow: 0 0 0 1px rgba(45,212,194,0.25); }
-    .btn-primary { width: 100%; margin-top: 10px; border-radius: 999px; border: none; padding: 9px 12px; font-size: 0.85rem; font-weight: 600; background: linear-gradient(135deg, #22c55e, #0ea5e9); color: #020617; box-shadow: 0 10px 25px rgba(34,197,94,0.45); }
-    .small { font-size: 0.7rem; color: var(--muted); margin-top: 6px; }
-    .team-row { display: flex; align-items: center; justify-content: space-between; padding: 6px 0; font-size: 0.8rem; }
-    .team-row + .team-row { border-top: 1px dashed rgba(30,41,59,0.9); }
-    .team-name { font-weight: 500; }
-    .owner-name { font-size: 0.7rem; color: var(--muted); }
-    .points-pill { font-size: 0.7rem; padding: 3px 8px; border-radius: 999px; background: rgba(15,23,42,0.9); border: 1px solid rgba(74,222,128,0.55); color: #bbf7d0; }
-    .player-chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px; }
-    .chip { font-size: 0.7rem; padding: 4px 6px; border-radius: 999px; background: rgba(15,23,42,0.9); border: 1px solid rgba(148,163,184,0.45); color: var(--muted); }
-    .status { font-size: 0.65rem; color: #4ade80; margin-top: 4px; }
-    .api-status { font-size: 0.65rem; padding: 2px 6px; border-radius: 4px; background: rgba(34,197,94,0.2); color: #4ade80; margin-top: 6px; }
-    .api-error { background: rgba(239,68,68,0.2); color: #fca5a5; }
-    button:disabled { opacity: 0.5; cursor: not-allowed; }
-    @media (min-width: 600px) { body { padding: 16px; } header h1 { font-size: 1.4rem; } }
-  </style>
-</head>
-<body>
-  <div class="app-shell">
-    <header>
-      <div>
-        <span>IPL 2026 FANTASY</span>
-        <h1>Live League</h1>
-      </div>
-      <div class="pill" id="apiStatus">Connecting...</div>
-    </header>
 
-    <nav class="tabs">
-      <button class="active" data-tab="create">✨ Create</button>
-      <button data-tab="teams">📋 Teams</button>
-      <button data-tab="leaderboard">🏆 Leaderboard</button>
-    </nav>
-
-    <main>
-      
-      <section class="card" id="tab-create">
-        <div class="card-header">
-          <div>
-            <div class="card-title">Create Fantasy XI</div>
-            <div class="card-subtitle">Live IPL matches + auto-scoring</div>
-          </div>
-          <span class="badge">Credits: 100/100</span>
-        </div>
-
-        <div class="field-group">
-          <div class="inline-fields">
-            <div><label>Manager</label><input id="ownerName" placeholder="Jay Mehta" /></div>
-            <div><label>Team name</label><input id="teamName" placeholder="Mumbai Mavericks" /></div>
-          </div>
-          <div>
-            <label for="matchSelect">🔴 Live IPL Matches</label>
-            <select id="matchSelect"><option>Loading...</option></select>
-          </div>
-        </div>
-
-        <div class="field-group">
-          <label>Players (comma separated)</label>
-          <input id="playersInput" placeholder="Rohit Sharma (C), Suryakumar Yadav, Bumrah" />
-          <small class="small">Add (C) for captain, (VC) for vice-captain</small>
-        </div>
-
-        <button class="btn-primary" id="saveTeamBtn">💾 Save Team</button>
-      </section>
-
-       
-      <section class="card" id="tab-teams" style="display:none;">
-        <div class="card-header">
-          <div><div class="card-title">My Teams</div><div class="card-subtitle">Auto-score with real stats</div></div>
-          <span class="badge" id="teams-count">0</span>
-        </div>
-        <div id="teamList"><div class="small">Create your first fantasy XI!</div></div>
-      </section>
-
-       
-      <section class="card" id="tab-leaderboard" style="display:none;">
-        <div class="card-header">
-          <div><div class="card-title">Live Leaderboard</div><div class="card-subtitle">Top fantasy teams</div></div>
-          <span class="badge">Live</span>
-        </div>
-        <div id="leaderboardList"><div class="small">Play matches to see rankings</div></div>
-      </section>
-    </main>
-  </div>
-
-  <script>
-    let teams = [];
-    const API_BASE = "https://iplfantasy2026.vercel.app";
-
-    // Tab switching
-    document.querySelectorAll("nav button").forEach(btn => {
-      btn.addEventListener("click", () => {
-        document.querySelectorAll("nav button").forEach(b => b.classList.remove("active"));
-        btn.classList.add("active");
-        const tab = btn.getAttribute("data-tab");
-        document.querySelectorAll("main > section").forEach(s => s.style.display = "none");
-        document.getElementById(`tab-${tab}`).style.display = "block";
-        if (tab === "teams") renderTeams();
-        if (tab === "leaderboard") renderLeaderboard();
-      });
-    });
-
-    // API Status
-    async function checkAPI() {
-      try {
-        const res = await fetch(`${API_BASE}/status`);
-        if (!res.ok) throw new Error(`HTTP ${res.status}`);
-        const data = await res.json();
-        console.log("API check:", data);
-
-        const text = data.cricapi || "Active";
-        const isOk = text?.includes("✅");
-        document.getElementById("apiStatus").textContent = text;
-        document.getElementById("apiStatus").className = isOk ? "pill api-status" : "pill api-status api-error";
-      } catch (err) {
-        console.error("API check failed:", err);
-        document.getElementById("apiStatus").textContent = "Backend offline";
-        document.getElementById("apiStatus").className = "pill api-status api-error";
-      }
-    }
-
-    // Load live IPL matches
-    async function loadLiveMatches() {
-      try {
-        const res = await fetch(`${API_BASE}/api/matches`);
-        const matches = await res.json();
-        const select = document.getElementById("matchSelect");
-        select.innerHTML = '<option value="">Select live IPL match</option>';
-        matches.slice(0, 15).forEach(match => {
-          const option = document.createElement("option");
-          option.value = match.id;
-          // Show only the match name in the dropdown
-          option.textContent = match.name || match.series?.name;
-          select.appendChild(option);
-        });
-      } catch (err) {
-        document.getElementById("matchSelect").innerHTML = '<option>API unavailable - manual entry</option>';
-      }
-    }
-
-    // Load teams from backend
-    async function loadTeams() {
-
-      console.log("Load Teams Called",teams);
-
-      try {
-        const res = await fetch(`${API_BASE}/api/teams`);
-        teams = await res.json();
-        renderTeams();
-        renderLeaderboard();
-      } catch (err) {
-        console.error("Load teams failed:", err);
-      }
-    }
-
-    // Render teams list (with match)
-    function renderTeams() {
-  const list = document.getElementById("teamList");
-  const count = document.getElementById("teams-count");
-
-  if (!teams.length) {
-    list.innerHTML = '<div class="small">Create your first fantasy XI!</div>';
-    count.textContent = "0";
-    return;
-  }
-
-  count.textContent = String(teams.length);
-  list.innerHTML = "";
-  
-  teams.forEach(t => {
-    const row = document.createElement("div");
-    row.className = "team-row";
-
-    // Left side
-    const left = document.createElement("div");
-
-    const name = document.createElement("div");
-    name.className = "team-name";
-    name.textContent = t.teamName;
-
-    const meta = document.createElement("div");
-    meta.className = "owner-name";
-    meta.innerHTML = `
-      ${t.ownerName}
-      <span style="font-size:0.65rem; color:#9ca3af; margin-left:4px;">
-        • Match: ${t.match}
-      </span>
-    `;
-
-    const players = document.createElement("div");
-    players.className = "player-chips";
-    t.players.slice(0, 4).forEach(p => {
-      const chip = document.createElement("span");
-      chip.className = "chip";
-      chip.textContent = p;
-      players.appendChild(chip);
-    });
-    if (t.players.length > 4) {
-      const more = document.createElement("span");
-      more.className = "chip";
-      more.textContent = `+${t.players.length - 4}`;
-      players.appendChild(more);
-    }
-
-    left.append(name, meta, players);
-
-    // Right side: points ONLY (no input / update / auto)
-    const right = document.createElement("div");
-    right.style.textAlign = "right";
-    right.style.minWidth = "100px";
-
-    const pointsPill = document.createElement("div");
-    pointsPill.className = "points-pill";
-    pointsPill.textContent = `${t.points} pts`;
-
-    right.append(pointsPill);
-
-    row.append(left, right);
-    list.appendChild(row);
-  });
-}
-
-    
-
-    // Render leaderboard (with match)
-    function renderLeaderboard() {
-      const list = document.getElementById("leaderboardList");
-      const sorted = [...teams].sort((a, b) => b.points - a.points);
-      
-      if (!sorted.length) {
-        list.innerHTML = '<div class="small">Create teams to see rankings</div>';
-        return;
-      }
-
-      list.innerHTML = "";
-      sorted.slice(0, 10).forEach((t, idx) => {
-        const row = document.createElement("div");
-        row.className = "team-row";
-        
-        const pos = document.createElement("span");
-        pos.className = "points-pill";
-        pos.style.minWidth = "24px";
-        pos.textContent = (idx + 1) + ".";
-        
-        const teamInfo = document.createElement("div");
-                teamInfo.innerHTML = `
-          <div class="team-name">${t.teamName}</div>
-          <div class="owner-name">${t.ownerName} • Match: ${t.match}</div>
-        `;
-        
-        const points = document.createElement("div");
-        points.className = "points-pill";
-        points.textContent = t.points + " pts";
-        
-        row.append(pos, teamInfo, points);
-        list.appendChild(row);
-      });
-    }
-
-    // Save team
-    document.getElementById("saveTeamBtn").addEventListener("click", async () => {
-      const ownerName = document.getElementById("ownerName").value.trim() || "Manager";
-      const teamName = document.getElementById("teamName").value.trim() || "Untitled";
-      const match = document.getElementById("matchSelect").value || "Practice match";
-      const playersRaw = document.getElementById("playersInput").value.trim();
-
-      if (!playersRaw) return alert("Add players!");
-
-      const players = playersRaw.split(",").map(p => p.trim()).filter(Boolean);
-
-      const res = await fetch(`${API_BASE}/api/teams`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ownerName, teamName, match, players })
-      });
-
-      if (res.ok) {
-        loadTeams();
-        document.getElementById("playersInput").value = "";
-        alert("✅ Team created! Check My Teams tab");
-      } else {
-        const err = await res.json();
-        alert("Error: " + (err.error || "Server error"));
-      }
-    });
-
-    // Initialize
-    checkAPI();
-    loadLiveMatches();
-    loadTeams();
-    //setInterval(checkAPI, 30000); // Check API every 30s
-    checkAPI();
-  </script>
-</body>
-</html>
-
-
-
-
- -->
 
 
 
@@ -544,18 +214,39 @@
     });
 
     // NEW: Load squad
-    async function loadSquad(teamNum) {
-      try {
-        const res = await fetch(`${APIBASE}/api/squad`);
-        //if (!res.ok) throw new Error(await res.text());
-        const data = await res.json();
-        squads[`team${teamNum}`] = data.players || [];
-        renderSquad(teamNum);
-      } catch (err) {
-        console.error('Squad load failed:', err);
-        alert(`Team ${teamNum} squad unavailable—check CricAPI key`);
-      }
+  async function loadSquad(teamNum) {
+  try {
+    const matchId = currentMatch?.id;
+    if (!matchId) {
+      alert("Please select a match first");
+      return;
     }
+
+    const res = await fetch(
+      `${APIBASE}/api/squad?matchId=${encodeURIComponent(matchId)}&team=${teamNum}`
+    );
+    if (!res.ok) throw new Error(await res.text());
+    
+    const data = await res.json();
+    squads[`team${teamNum}`] = data.players;
+    renderSquad(teamNum);
+  } catch (err) {
+    console.error("Squad load failed", err);
+    alert(`Team ${teamNum} squad unavailable - check CricAPI key`);
+  }
+}
+    // async function loadSquad(teamNum) {
+    //   try {
+    //     const res = await fetch(`${APIBASE}/api/squad`);
+    //     //if (!res.ok) throw new Error(await res.text());
+    //     const data = await res.json();
+    //     squads[`team${teamNum}`] = data.players || [];
+    //     renderSquad(teamNum);
+    //   } catch (err) {
+    //     console.error('Squad load failed:', err);
+    //     alert(`Team ${teamNum} squad unavailable—check CricAPI key`);
+    //   }
+    // }
     document.getElementById('loadTeam1').addEventListener('click', () => loadSquad(1));
     document.getElementById('loadTeam2').addEventListener('click', () => loadSquad(2));
 
