@@ -453,9 +453,9 @@ app.get('/api/match_squad', async (req, res) => {
 
     // Fallback to match details if no fantasySquad
     if (!squadData || !squadData.squad) {
-      const matchRes = await axios.get(`https://api.cricapi.com/v1/match/${matchId}`, {
-        params: { apikey: CRICAPI_KEY },
-        timeout: 8000,
+      const matchRes = await axios.get(`https://api.cricapi.com/v1/match_squad`, {
+        params: { apikey: CRICAPI_KEY, id : matchId },
+      timeout: 10000,
       });
       squadData = { squad: [{ players: matchRes.data.players || [] }] };
     }
