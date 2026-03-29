@@ -437,7 +437,7 @@ app.get('/status', async (req, res) => {
 });
 
 // NEW: Squad endpoint
-app.get('/api/squad', async (req, res) => {
+app.get('/api/match_squad', async (req, res) => {
   const { matchId, team } = req.query;
   if (!CRICAPI_KEY) return res.status(503).json({ error: 'CricAPI key required' });
   if (!matchId) return res.status(400).json({ error: 'matchId required' });
@@ -550,7 +550,7 @@ app.get('/api/matches', async (req, res) => {
         dateTimeGMT: m.dateTimeGMT,
         team1: m.t1 || m.team_info?.[0]?.name || m.teams?.[0] || '',
         team2: m.t2 || m.team_info?.[1]?.name || m.teams?.[1] || '',
-        series: { id: 'ipl-2026', name: 'IPL 2026' },
+        series: { id: 'ipl-2026', name: 'Indian Premier League 2026' },
         fantasyEnabled: true,
         matchStarted: m.ms === 'live',
         matchEnded: !!m.statusSummary?.includes('Complete'),
