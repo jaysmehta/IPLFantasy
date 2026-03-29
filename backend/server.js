@@ -450,6 +450,7 @@ app.get('/api/match_squad', async (req, res) => {
       timeout: 10000,
     });
     let squadData = squadResponse.data;
+    console.log("received response for squad API",squadResponse);
 
     // Fallback to match details if no fantasySquad
     if (!squadData || !squadData.squad) {
