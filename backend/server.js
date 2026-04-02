@@ -109,9 +109,9 @@ app.get('/api/match_squad', async (req, res) => {
 
     console.log("received response for squad API",squadData);
     // Filter for specific team if requested
-    let players = squadData.[0]?.players || [];  // Team 1: data[0]
+    let players = squadData[0]?.players || [];  // Team 1: data[0]
 if (team === '2') {
-  players = squadData.[1]?.players || players;  // Team 2: data[1]
+  players = squadData[1]?.players || players;  // Team 2: data[1]
 }
 
     // Standardize player format
